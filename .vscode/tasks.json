@@ -1,0 +1,154 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Project",
+            "type": "shell",
+            "command": "make",
+            "args": ["all"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Clean Project",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build Debug",
+            "type": "shell",
+            "command": "make",
+            "args": ["debug"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Deploy to Pi",
+            "type": "shell",
+            "command": "scp",
+            "args": [
+                "${workspaceFolder}/build/*.bin",
+                "pi@raspberrypi.local:/home/pi/"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "dependsOn": "Build Project",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Compile Current File",
+            "type": "shell",
+            "command": "arm-linux-gnueabihf-gcc",
+            "args": [
+                "-mcpu=cortex-a53",
+                "-mfpu=neon-fp-armv8",
+                "-mfloat-abi=hard",
+                "-Wall",
+                "-Wextra",
+                "-std=c11",
+                "-c",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.o"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Generate Assembly",
+            "type": "shell",
+            "command": "arm-linux-gnueabihf-gcc",
+            "args": [
+                "-mcpu=cortex-a53",
+                "-mfpu=neon-fp-armv8",
+                "-mfloat-abi=hard",
+                "-Wall",
+                "-Wextra",
+                "-std=c11",
+                "-S",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.s"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Disassemble Binary",
+            "type": "shell",
+            "command": "arm-linux-gnueabihf-objdump",
+            "args": [
+                "-d",
+                "${workspaceFolder}/build/*.elf"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}
