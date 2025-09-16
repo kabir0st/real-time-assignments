@@ -3,7 +3,7 @@
 //  Updated by Wagner Morais and Johannes van Esch on 28/08/18.
 //  Updated by Wagner Morais and Hazem Ali on 26/08/21.
 //  Copyright (c) 2014 by Mohammadreza Mousavi [mohmou]. All rights reserved.
- 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "iregister.h"
@@ -22,13 +22,28 @@ void resetBit(int i, iRegister *r)
 		fprintf(stderr,"Error: Invalid bit\n");
 		return;
 	}
-	
+
   	r->content &= ~(1 << i);
 
 	// post-condition
 	if((r->content & (1<<i)) != 0)
 	{
 		fprintf(stderr, "Error: Failed to reset Bit\n");
-		return;	
+		return;
 	}
+}
+
+void resetAll(iRegister *r) {
+    // check if the pointer is NULL
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to resetAll\n");
+        return;
+    }
+    // reset all the bits to 0
+    r->content = 0;
+    // check if the bits are reset saved in the register
+    if (r->content != 0) {
+        fprintf(stderr, "Error: Failed to reset All\n");
+        return;
+    }
 }
