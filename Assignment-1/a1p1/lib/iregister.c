@@ -47,3 +47,15 @@ void resetAll(iRegister *r) {
         return;
     }
 }
+// Function to return binary string of r->content
+char* convert_to_binary(iRegister *r) {
+    int bits = sizeof(r->content) * 8; // usually 32 bits
+    char *bin_str = malloc(bits + 1);  // +1 for null terminator
+    if (!bin_str) return NULL;         // check allocation
+
+    for (int i = bits - 1; i >= 0; i--) {
+        bin_str[bits - 1 - i] = (r->content & (1 << i)) ? '1' : '0';
+    }
+    bin_str[bits] = '\0'; // null terminate the string
+    return bin_str;
+}
