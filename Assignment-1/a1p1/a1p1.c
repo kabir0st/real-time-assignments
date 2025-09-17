@@ -195,7 +195,7 @@ int main()
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
-	uart_puts("All tests completed!\n");
+	uart_puts("All operations completed!\n");
 
 	return 0;
 }
