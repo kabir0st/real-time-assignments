@@ -98,5 +98,30 @@ void shiftLeft(int, iRegister *);
  *    printf("%s",reg2str(r))
  */
 void resetBit(int, iRegister *);
+
+/** @brief Converts the content of an iRegister to a binary string representation
+ *
+ *  @param r A pointer to an iRegister data structure whose content will be converted
+ *  
+ *  @return A dynamically allocated string containing the binary representation of r->content.
+ *          The string format is: "+" or "-" followed by 32 binary digits (0s and 1s).
+ *          Returns NULL if memory allocation fails.
+ *
+ *  Pre-condition: iRegister pointer != NULL
+ *
+ *  Post-condition: The returned string shows the two's complement representation of the integer.
+ *                  For positive numbers: starts with "+" followed by binary digits.
+ *                  For negative numbers: starts with "-" followed by two's complement binary digits.
+ *                  The string is null-terminated and must be freed by the caller.
+ *
+ *  Example outputs:
+ *  - For +85:  "+00000000000000000000000001010101"
+ *  - For -85:  "-11111111111111111111111110101011"
+ *  - For +0:   "+00000000000000000000000000000000"
+ *  - For -1:   "-11111111111111111111111111111111"
+ *
+ *  Note: This function uses two's complement representation for negative numbers,
+ *        which is the standard way computers store signed integers.
+ */
 char* convert_to_binary(iRegister *);
 #endif
