@@ -47,12 +47,20 @@ void resetAll(iRegister *r) {
 }
 
  char* reg2str(iRegister r) {
+
+    // pre-condition
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to reg2str\n");
+        return NULL;
+    }
+
     // range of two's complement system is -2^(n-1) to 2^(n-1)-1
     // We need to allocate bits + 1 for the null terminator
 
     // null termination is used to add a null character at the end of the string
     // this is used to indicate the end of the string
     // avoid undefined behavior among other things
+
     static char str[33]; // allocate 33 characters, 32 bits + null terminator
 
     for (int i = 31; i >= 0; i--) {
@@ -63,10 +71,16 @@ void resetAll(iRegister *r) {
         str [31 - i] = (r.content >> i) & 1u ? '1' : '0';
     }
     str[32] = '\0'; // null terminator for string
+    // post-condition
+    if (str == NULL) {
+        fprintf(stderr, "Error: Failed to convert register to string\n");
+        return NULL;
+    }
     return str;
 }
 
 void shiftRight(int n, iRegister *r){
+    // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
      // cast to unsigned to ensure logical shift
     unsigned int temp = (unsigned int) r->content;
@@ -74,25 +88,32 @@ void shiftRight(int n, iRegister *r){
     temp >>= n;
     // store back
     r->content = (int) temp;
+    // post-condition
+    if (r->content != temp) {
+        fprintf(stderr, "Error: Failed to shift right\n");
+        return;
+    }
 }
 
 void shiftLeft(int n, iRegister *r){
+    // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
     // left shift, fills with 0
     r->content <<= n;
+    // post-condition
+    if (r->content != (temp << n)) {
+        fprintf(stderr, "Error: Failed to shift left\n");
+        return;
+    }
 }
 
 void setBit(int i, iRegister *r) {
     // pre-condition
-    if (r == NULL) {
+    if (r == NULL || i < 0 || i > 31) {
         fprintf(stderr, "Error: A NULL pointer was given to setBit\n");
         return;
     }
     // pre-condition
-    if (i < 0 || i > 31) {
-        fprintf(stderr, "Error: Invalid bit\n");
-        return;
-    }
     // set the bit to 1
     // bitwise OR shifts 1 to the left i times and then
     //  ORs it with the content of register
@@ -113,10 +134,9 @@ void setAll(iRegister *r) {
         return;
     }
     // set all the bits to 1
-    r->content = ~0u;
+    r->content = -1;
     // post-condition
-    // checking if all the bits are set to 1
-    if (r->content != (int)~0u) {
+    if (r->content != -1) {
         fprintf(stderr, "Error: Failed to set All\n");
         return;
     }
@@ -125,28 +145,19 @@ void setAll(iRegister *r) {
 
 int getBit(int i, iRegister *r) {
     // pre-condition
-    if (r == NULL) {
+    if (r == NULL || i < 0 || i > 31) {
         fprintf(stderr, "Error: A NULL pointer was given to getBit\n");
         return -1;
     }
     // pre-condition
-    if (i < 0 || i > 31) {
-        fprintf(stderr, "Error: Invalid bit\n");
-        return -1;
-    }
     // get the bit
     return (r->content & (1 << i)) ? 1 : 0;
 }
 
 int getNibble(int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL) {
+    if (r == NULL || pos != 1 && pos != 2) {
         fprintf(stderr, "Error: A NULL pointer was given to getNibble\n");
-        return -1;
-    }
-    // pre-condition
-    if (pos != 1 && pos != 2) {
-        fprintf(stderr, "Error: Invalid position\n");
         return -1;
     }
     // get the nibble
@@ -155,20 +166,20 @@ int getNibble(int pos, iRegister *r) {
     }
      //pos == 2
     return (r->content >> 4) & 0xF; //shift right 4 and mask 1111 to get bits 4-7
-
 }
 
 void assignNibble(int value, int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL) {
+    if (r == NULL || pos != 1 && pos != 2) {
         fprintf(stderr, "Error: A NULL pointer was given to assignNibble\n");
         return;
     }
     // pre-condition
-    if (pos != 1 && pos != 2) {
-        fprintf(stderr, "Error: Invalid position\n");
-        return;
-    }
     // assign the nibble
     r->content |= (value << (pos == 1 ? 0 : 4));
+    // post-condition
+    if (r->content != (value << (pos == 1 ? 0 : 4))) {
+        fprintf(stderr, "Error: Failed to assign nibble\n");
+        return;
+    }
 }

@@ -43,18 +43,11 @@ void led_off(){
 void led_toggle(){
     if (GPIO->GPLEV0 & (1 << 16)) {
         // LED is currently on, turn it off
-        GPIO->GPCLR0 |= (1 << 16);
+        led_off();
     } else {
         // LED is currently off, turn it on
-        GPIO->GPSET0 |= (1 << 16);
+        led_on();
     }
-#if defined( RPI3 ) && defined( IOBPLUS )
-    if (GPIO->GPLEV0 & (1 << LED_GPIO_BIT)) {
-        GPIO->LED_GPCLR |= (1 << LED_GPIO_BIT);
-    } else {
-        GPIO->LED_GPSET |= (1 << LED_GPIO_BIT);
-    }
-#endif
 }
 
 
