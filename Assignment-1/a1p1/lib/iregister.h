@@ -23,51 +23,231 @@ typedef struct{
  *  Students should follow that format.
  */
 
-/** resets all the bits of the iRegister (to 0)
+/** @brief Resets all the bits of the iRegister to 0
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return void
+ *
+ *  Pre-condition: iRegister != NULL
+ *
+ *  Post-condition: After resetAll(r), all bits of the iRegister are set to 0.
+ *                  The content field becomes 0.
+ *
+ *  Properties:
+ *  After resetAll(r), getBit(i, r) = 0 for all 0 <= i < 32
+ *
+ *  Test-cases:
+ *  1. Allocate memory to an iRegister r
+ *  2. Call resetAll(&r)
+ *  3. Verify by printf("%s", reg2str(r)) - should display all zeros
  */
 void resetAll(iRegister *);
 
-/** sets the i'th bit of the iRegister (to 1)
+/** @brief Sets the i'th bit of the iRegister to 1
+ *
+ *  @param i The bit position to set
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return void
+ *
+ *  Pre-condition: 0 <= i < 32 and iRegister != NULL
+ *
+ *  Post-condition: After setBit(i, r), the i'th bit of iRegister is 1
+ *
+ *  Properties:
+ *  After setBit(i, r), getBit(i, r) = 1
+ *
+ *  Test-cases:
+ *  1. Allocate memory to an iRegister r
+ *  2. Call resetAll(&r) to clear all bits
+ *  3. Call setBit(5, &r) to set bit 5
+ *  4. Verify by printf("%s", reg2str(r)) - bit 5 should be 1
  */
 void setBit(int, iRegister *);
 
 
-/**sets all the bits of the iRegister (to 1)
+/** @brief Sets all the bits of the iRegister to 1
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return void
+ *
+ *  Pre-condition: iRegister != NULL
+ *
+ *  Post-condition: After setAll(r), all bits of the iRegister are set to 1.
+ *                  The content field becomes -1 (all bits set in two's complement).
+ *
+ *  Properties:
+ *  After setAll(r), getBit(i, r) = 1 for all 0 <= i < 32
+ *
+ *  Test-cases:
+ *  1. Allocate memory to an iRegister r
+ *  2. Call setAll(&r)
+ *  3. Verify by printf("%s", reg2str(r)) - should display all ones
  */
 void setAll(iRegister *);
 
 
-/** returns the i'th bit of the iRegister as an integer (1 if it is set, or 0 otherwise)
+/** @brief Returns the i'th bit of the iRegister
+ *
+ *  @param i The bit position to retrieve
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return int The value of the i'th bit (0 or 1)
+ *
+ *  Pre-condition: 0 <= i < 32 and iRegister != NULL
+ *
+ *  Properties:
+ *  getBit(i, r) returns either 0 or 1
+ *
+ *  Test-cases:
+ *  1. Allocate memory to an iRegister r
+ *  2. Call setBit(3, &r) to set bit 3
+ *  3. Verify getBit(3, &r) returns 1
  */
 int getBit(int, iRegister *);
 
 
-/** set the first (for pos=1) or the second (for pos=2) four bits of iRegsiter
+/** @brief Sets the first or the second nibble of iRegister to the given value
+ *
+ *  @param nibble value for the nibble
+ *
+ *  @param pos position to write the nibble
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return void
+ *
+ *  Pre-condition: 0 <= nibble <= 15, pos == 1 or pos == 2, and iRegister != NULL
+ *
+ *  Post-condition: The specified nibble is set to the given value, other bits remain unchanged.
+ *                  For pos=1: bits 0-3 are modified
+ *                  For pos=2: bits 4-7 are modified
+ *
+ *  Properties:
+ *  After assignNibble(nibble, pos, r), getNibble(pos, r) == nibble
+ *  Bits outside the specified nibble remain unchanged
+ *
+ *  Test-cases:
+ *  1. Allocate memory to an iRegister r, set to 0
+ *  2. Call assignNibble(5, 1, &r) to set lower nibble to 5
+ *  3. Verify getNibble(1, &r) returns 5
+ *  4. Call assignNibble(10, 2, &r) to set upper nibble to 10
+ *  5. Verify getNibble(2, &r) returns 10 and getNibble(1, &r) still returns 5
  */
 void assignNibble(int, int, iRegister *);
 
 
-/** get the first (for pos=1) or the second (for pos=2) four bits of iRegsiter
+/** @brief Gets the first or the second nibble of iRegister
+ *
+ *  @param pos position to read the nibble
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return int value of the nibble
+ *
+ *  Pre-condition: pos == 1 or pos == 2, and iRegister != NULL
+ *
+ *  Post-condition: The iRegister remains unchanged. Returns the value of the nibble.
+ *                  For pos=1: returns value of bits 0-3
+ *                  For pos=2: returns value of bits 4-7
+ *
+ *  Properties:
+ *  getNibble(pos, r) returns a value between 0 and 15
+ *
+ *  Test-cases:
+ *  1. Allocate memory to an iRegister r
+ *  2. Call assignNibble(7, 1, &r) to set lower nibble to 7
+ *  3. Verify getNibble(1, &r) returns 7
+ *  4. Call assignNibble(12, 2, &r) to set upper nibble to 12
+ *  5. Verify getNibble(2, &r) returns 12
  */
 int getNibble(int, iRegister *);
 
 
-/** returns a pointer to an array of 32 characters, with each character
- *  representing the corresponding bit of the iRegister, i.e., if the bit is set,
- *  then the character is "1" (ASCII char with code 49), or otherwise is "0"
- *  (ASCII char with code 48)
+/** @brief Returns a pointer to an array of 32 characters representing the iRegister in binary
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return char* A pointer to a static string containing 32 characters ('0' or '1')
+ *                representing each bit of the iRegister. The string is null-terminated.
+ *
+ *  Pre-condition: iRegister != NULL
+ *
+ *  Post-condition: Returns a string representation of the binary of iRegister
+ *
+ *  Properties:
+ *  The returned string has exactly 32 characters plus null terminator
+ *
+ *  Test-cases:
+ *  1. Create iRegister r with content = 5
+ *  2. Call reg2str(r)
+ *  3. Verify result is "00000000000000000000000000000101"
+ *  4. Create iRegister r with content = -1
+ *  5. Verify result is "11111111111111111111111111111111"
  */
 char *reg2str(iRegister);
 
 
-/** shifts all the bits of the iRegister to the right by n palces (appends 0
- *  from the left)
+/** @brief Shifts all the bits of the iRegister to the right by n places (logical shift)
+ *
+ *  @param n The number of positions to shift right (0-31)
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return void
+ *
+ *  Pre-condition: 0 <= n <= 31 and iRegister != NULL
+ *
+ *  Post-condition: All bits are shifted right by n positions. Leftmost n bits become 0.
+ *                  This is a logical shift that always fills with zeros from the left.
+ *
+ *  Properties:
+ *  After shiftRight(n, r), the rightmost n bits are lost
+ *  The leftmost n bits become 0
+ *  For positive numbers: equivalent to integer division by 2^n
+ *
+ *  Test-cases:
+ *  1. Create iRegister r with content = 8 (binary: 1000)
+ *  2. Call shiftRight(1, &r)
+ *  3. Verify content becomes 4 (binary: 0100)
+ *  4. Create iRegister r with content = -8
+ *  5. Call shiftRight(1, &r)
+ *  6. Verify result is a large positive number (logical shift fills with 0s)
  */
 void shiftRight(int, iRegister *);
 
 
-/** shifts all the bits of the iRegister to the left by n palces (appends 0
- *  from the right)
+/** @brief Shifts all the bits of the iRegister to the left by n places (appends 0 from the right) - performs LOGICAL shift (always fills with 0s)
+ *
+ *  @param n The number of positions to shift left (0-31)
+ *
+ *  @param r Pointer to iRegister
+ *
+ *  @return void
+ *
+ *  Pre-condition: 0 <= n <= 31 and iRegister != NULL
+ *
+ *  Post-condition: All bits are shifted left by n positions. Rightmost n bits become 0.
+ *                  This is a logical shift that always fills with zeros from the right.
+ *                  The leftmost n bits are lost (shifted out).
+ *
+ *  Properties:
+ *  After shiftLeft(n, r), the leftmost n bits are lost
+ *  The rightmost n bits become 0
+ *  For positive numbers without overflow: equivalent to multiplication by 2^n
+ *  For negative numbers without overflow: equivalent to division by 2^n
+ *
+ *  Test-cases:
+ *  1. Create iRegister r with content = 4 (binary: 0100)
+ *  2. Call shiftLeft(1, &r)
+ *  3. Verify content becomes 8 (binary: 1000)
+ *  4. Create iRegister r with content = 1073741824 (large positive)
+ *  5. Call shiftLeft(1, &r)
+ *  6. Verify overflow behavior (leftmost bit is lost)
  */
 void shiftLeft(int, iRegister *);
 
@@ -76,19 +256,17 @@ void shiftLeft(int, iRegister *);
  *
  *  @param i Is i'th bit of the iRegister to be reset
  *
- *  @param r A pointer to a memory location of a iRegister data structure.
+ *  @param r Pointer to iRegister
  *
  *  @return void
  *
  *  Pre-condition: 0 <= i < 32 and iRegister != Null
  *
- *  Post-condition: after reset(i, r) the i'th bit of iRegister is 0, all other
+ *  Post-condition: after resetBit(i, r) the i'th bit of iRegister is 0, all other
  *  bits remain unchanged
  *  properties:
  *  after resetBit(i, r),  getBit(i, r) = 0
- *  if getBit(i, r) == 0 then
- *    getBit(j, r) returns the same value for all
- *  0 <= j < 32 and j <> i before and after resetBit(i, r)
+ *  if getBit(i, r) == 0 then getBit(j, r) returns the same value for all 0 <= j < 32 and j <> i before and after resetBit(i, r)
  *
  *  test-cases:
  *  1,2,3. Allocate memory to an iRegister r
@@ -98,32 +276,5 @@ void shiftLeft(int, iRegister *);
  *    printf("%s",reg2str(r))
  */
 void resetBit(int, iRegister *);
-
-/** @brief Converts the content of an iRegister to a binary string representation
- *
- *  @param r A pointer to an iRegister data structure whose content will be converted
- *
- *  @return A dynamically allocated string containing the binary representation of r->content.
- *          The string format is 32 binary digits (0s and 1s) representing the two's complement
- *          form of the integer. Returns NULL if memory allocation fails.
- *
- *  Pre-condition: iRegister pointer != NULL
- *
- *  Post-condition: The returned string shows the two's complement representation of the integer.
- *                  The most significant bit (MSB) indicates the sign: 0 for positive, 1 for negative.
- *                  The string is null-terminated and must be freed by the caller.
- *
- *  Example outputs:
- *  - For +85:  "00000000000000000000000001010101"
- *  - For -85:  "11111111111111111111111110101011"
- *  - For +0:   "00000000000000000000000000000000"
- *  - For -1:   "11111111111111111111111111111111"
- *
- *  Note: This function uses two's complement representation for negative numbers,
- *        which is the standard way computers store signed integers. The sign is
- *        encoded in the most significant bit (bit 31).
- */
-char* convert_to_binary(iRegister *);
-
 
 #endif

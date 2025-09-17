@@ -59,17 +59,11 @@ int main(){
     printf("AF reseting: %s = %d\n", convert_to_binary(&r), r.content);
     printf("--------------------------------\n");
 
-
-    // Implementing resetAll
     r.content = initial_value;
     printf("Operation Reseting all bits: ");
     printf("r.content: %s = %d\n", convert_to_binary(&r), r.content);
     resetAll(&r);
     printf("AF reseting: %s = %d\n", convert_to_binary(&r), r.content);
-    printf("--------------------------------\n");
-
-    // Implementing setBit
-
-
+    printf("--------------------------------\n")
     return 0;
 }

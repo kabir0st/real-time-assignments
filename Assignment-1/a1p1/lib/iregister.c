@@ -22,9 +22,7 @@ void resetBit(int i, iRegister *r)
 		fprintf(stderr,"Error: Invalid bit\n");
 		return;
 	}
-
   	r->content &= ~(1 << i);
-
 	// post-condition
 	if((r->content & (1<<i)) != 0)
 	{
@@ -48,31 +46,129 @@ void resetAll(iRegister *r) {
     }
 }
 
-
-// Function to return binary string of r->content
-char* convert_to_binary(iRegister *r) {
-    // this converts byte to bits
+ char* reg2str(iRegister r) {
     // range of two's complement system is -2^(n-1) to 2^(n-1)-1
     // We need to allocate bits + 1 for the null terminator
 
-    int bits = sizeof(r->content) * 8; // usually 32 bits
-
     // null termination is used to add a null character at the end of the string
     // this is used to indicate the end of the string
-    // avoid undefined behavior among other things that I've not
-    // understood yet.
-    char *bin_str = malloc(bits + 1);  // +1 for null terminator
-    if (!bin_str) return NULL;         // check allocation
-    // if nothing is allocated just return Null.
+    // avoid undefined behavior among other things
+    static char str[33]; // allocate 33 characters, 32 bits + null terminator
 
-    // Convert all bits including the sign bit (MSB)
-    for (int i = bits - 1; i >= 0; i--) {
-        // chekcing for common bits between the register and the bitmask
-        // if the bit is set, add 1 to the string
-        // if the bit is not set, add 0 to the string
-        // the bits are added from the most significant bit to the least significant bit
-        bin_str[bits - 1 - i] = (r->content & (1 << i)) ? '1' : '0';
+    for (int i = 31; i >= 0; i--) {
+        // doing right shift from the MSB to the LSB
+        // and then checking if the bit is set
+        // if it is set, then the character is "1"
+        // if it is not set, then the character is "0"
+        str [31 - i] = (r.content >> i) & 1u ? '1' : '0';
     }
-    bin_str[bits] = '\0'; // null terminate the string
-    return bin_str;
+    str[32] = '\0'; // null terminator for string
+    return str;
+}
+
+void shiftRight(int n, iRegister *r){
+    if (r == NULL || n < 0 || n > 31) return;
+     // cast to unsigned to ensure logical shift
+    unsigned int temp = (unsigned int) r->content;
+    // logical shift, fills with 0
+    temp >>= n;
+    // store back
+    r->content = (int) temp;
+}
+
+void shiftLeft(int n, iRegister *r){
+    if (r == NULL || n < 0 || n > 31) return;
+    // left shift, fills with 0
+    r->content <<= n;
+}
+
+void setBit(int i, iRegister *r) {
+    // pre-condition
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to setBit\n");
+        return;
+    }
+    // pre-condition
+    if (i < 0 || i > 31) {
+        fprintf(stderr, "Error: Invalid bit\n");
+        return;
+    }
+    // set the bit to 1
+    // bitwise OR shifts 1 to the left i times and then
+    //  ORs it with the content of register
+    r->content |= (1 << i);
+    // post-condition
+    // checking if the bit is set to 1
+    if ((r->content & (1 << i)) == 0) {
+        fprintf(stderr, "Error: Failed to set Bit\n");
+        return;
+    }
+}
+
+
+void setAll(iRegister *r) {
+    // pre-condition
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to setAll\n");
+        return;
+    }
+    // set all the bits to 1
+    r->content = ~0u;
+    // post-condition
+    // checking if all the bits are set to 1
+    if (r->content != (int)~0u) {
+        fprintf(stderr, "Error: Failed to set All\n");
+        return;
+    }
+}
+
+
+int getBit(int i, iRegister *r) {
+    // pre-condition
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to getBit\n");
+        return -1;
+    }
+    // pre-condition
+    if (i < 0 || i > 31) {
+        fprintf(stderr, "Error: Invalid bit\n");
+        return -1;
+    }
+    // get the bit
+    return (r->content & (1 << i)) ? 1 : 0;
+}
+
+int getNibble(int pos, iRegister *r) {
+    // pre-condition
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to getNibble\n");
+        return -1;
+    }
+    // pre-condition
+    if (pos != 1 && pos != 2) {
+        fprintf(stderr, "Error: Invalid position\n");
+        return -1;
+    }
+    // get the nibble
+    if(pos == 1){
+        return r->content & 0xF; //mask 1111 to get lowest 4 bits
+    }
+     //pos == 2
+    return (r->content >> 4) & 0xF; //shift right 4 and mask 1111 to get bits 4-7
+
+}
+
+void assignNibble(int value, int pos, iRegister *r) {
+    // pre-condition
+    if (r == NULL) {
+        fprintf(stderr, "Error: A NULL pointer was given to assignNibble\n");
+        return;
+    }
+    // pre-condition
+    if (pos != 1 && pos != 2) {
+        fprintf(stderr, "Error: Invalid position\n");
+        return;
+    }
+    // assign the nibble
+    r->content |= (value << (pos == 1 ? 0 : 4));
 }
