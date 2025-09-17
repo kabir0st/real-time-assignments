@@ -47,17 +47,13 @@ void resetAll(iRegister *r) {
         return;
     }
 }
+
+
 // Function to return binary string of r->content
-// I copied this function from the internet, I am trying
-// to understand why the malloc
 char* convert_to_binary(iRegister *r) {
     // this converts byte to bits
-    // range of 2 complement system is -2^(n-1) to 2^(n-1)-1
-    // so we need to allocate bits + 1 for the sign bit
-    // here -2^31 to 2^31-1
-    // in a 3 bit system it's going to be -4 to +3
-    // check notes on usages of MSB and having to
-    // eleminaite +0 and -0.
+    // range of two's complement system is -2^(n-1) to 2^(n-1)-1
+    // We need to allocate bits + 1 for the null terminator
 
     int bits = sizeof(r->content) * 8; // usually 32 bits
 
@@ -65,17 +61,18 @@ char* convert_to_binary(iRegister *r) {
     // this is used to indicate the end of the string
     // avoid undefined behavior among other things that I've not
     // understood yet.
-    char *bin_str = malloc(bits + 2);  // +1 for sign, +1 for null terminator
+    char *bin_str = malloc(bits + 1);  // +1 for null terminator
     if (!bin_str) return NULL;         // check allocation
     // if nothing is allocated just return Null.
 
-    // Add sign character at the beginning
-    bin_str[0] = (r->content < 0) ? '-' : '+';
-
     // Convert all bits including the sign bit (MSB)
     for (int i = bits - 1; i >= 0; i--) {
-        bin_str[bits - i] = (r->content & (1 << i)) ? '1' : '0';
+        // chekcing for common bits between the register and the bitmask
+        // if the bit is set, add 1 to the string
+        // if the bit is not set, add 0 to the string
+        // the bits are added from the most significant bit to the least significant bit
+        bin_str[bits - 1 - i] = (r->content & (1 << i)) ? '1' : '0';
     }
-    bin_str[bits + 1] = '\0'; // null terminate the string
+    bin_str[bits] = '\0'; // null terminate the string
     return bin_str;
 }
