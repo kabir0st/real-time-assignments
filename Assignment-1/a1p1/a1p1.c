@@ -19,16 +19,16 @@ int main()
 	int inumber, inibble, ibit, ishift = 0;
 	// Using the uart
 	// First, initialize and clear the channel
-	// uart_init();
-	// uart_clear();
-	
+	uart_init();
+	uart_clear();
+
 	// To Display a string
 	// uart_puts("String\n");
-	
+
 	// To get one character
 	// c=uart_getc();
-	
-	// However, to get a number, you need to call uart_getc 
+
+	// However, to get a number, you need to call uart_getc
 	// multiple times until receiving a new line.
 	// The results of each call to uart_getc can be stored into str
 	// atoi(str) will result a number.
