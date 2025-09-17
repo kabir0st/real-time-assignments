@@ -21,7 +21,6 @@ rpi_sys_timer_t* RPI_GetSystemTimer(void)
 void RPI_WaitMicroSeconds( uint32_t us )
 {
     volatile uint32_t ts = rpiSystemTimer->counter_lo;
-
     while( ( rpiSystemTimer->counter_lo - ts ) < us )
     {
         /* BLANK */
