@@ -40,12 +40,9 @@
 	"editor.defaultFormatter": "ms-vscode.cpptools",
 	"editor.semanticHighlighting.enabled": true,
 	"editor.minimap.enabled": true,
-	"editor.wordWrap": "off",
 	"editor.trimAutoWhitespace": true,
 	"editor.formatOnSave": true,
 	"editor.formatOnType": true,
-	"editor.bracketPairColorization.enabled": true,
-	"editor.guides.bracketPairs": true,
 	"editor.showFoldingControls": "always",
 
 	// Files Settings
