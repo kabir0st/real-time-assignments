@@ -31,11 +31,16 @@ int main(){
             }
         }
     }
+
+    printf("Initial value: %d\n", initial_value);
+    // Test left shift function
     r.content = initial_value;
-    printf("Nibble 1: %d\n", getNibble(1, &r));
-    printf("Nibble 2: %d\n", getNibble(2, &r));
-    assignNibble(15, 1, &r);
-    printf("Nibble 1: %d\n", getNibble(1, &r));
-    printf("Nibble 2: %d\n", getNibble(2, &r));
+
+
+    assignNibble(7, 3, &r);  // Set lowest nibble to 15
+
+    int nibble0 = getNibble(3, &r);
+    printf("Nibble: %d\n", nibble0);
+    convert_to_binary(nibble0);
     return 0;
 }

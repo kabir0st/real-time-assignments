@@ -99,39 +99,32 @@ void convert_to_binary(int value) {
     }
     bin_str[bits] = '\0'; // null terminate the string
     fprintf(stderr, "Binary string: %s\n", bin_str);
+    free(bin_str); // free allocated memory
 }
 
 void shiftRight(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
-    int temp = (int) r->content;
     fprintf(stderr, "Shift right B : ");
-    convert_to_binary(temp);
-    // logical shift, fills with 0
-    temp >>= n;
+    convert_to_binary(r->content);
+    r->content >>= n;
     fprintf(stderr, "Shift right A : ");
-    convert_to_binary(temp);
+    convert_to_binary(r->content);
     // store back
-    r->content = (int) temp;
+    r->content = (int) r->content;
     // post-condition
 }
 
 void shiftLeft(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
-    // store original value for post-condition check
     fprintf(stderr, "Shift left B : ");
     convert_to_binary(r->content);
-    int temp = r->content;
     // left shift, fills with 0
     r->content <<= n;
     fprintf(stderr, "Shift left A : ");
     convert_to_binary(r->content);
     // post-condition
-    if (r->content != (temp << n)) {
-        fprintf(stderr, "Error: Failed to shift left\n");
-        return;
-    }
 }
 
 void setBit(int i, iRegister *r) {
@@ -188,20 +181,37 @@ int getNibble(int pos, iRegister *r) {
         return -1;
     }
     // get the nibble
+    printf("Getting processing : ");
+    convert_to_binary(r->content >> 4*pos);
     return (r->content >> 4*pos) & 0xF; //shift right 4 and mask 1111 to get bits 4-7
 }
 
 void assignNibble(int value, int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL || (pos != 1 && pos != 2)) {
-        fprintf(stderr, "Error: A NULL pointer was given to assignNibble\n");
+    if (r == NULL || (pos < 0 || pos > 7)) {
+        fprintf(stderr, "Error: Invalid parameters given to assignNibble\n");
         return;
     }
-    // pre-condition
-    // assign the nibble
-    r->content |= (value << (pos == 1 ? 0 : 4));
-    // post-condition
-    if (r->content != (value << (pos == 1 ? 0 : 4))) {
+    // pre-condition: check if value is valid nibble (0-15)
+    if (value < 0 || value > 15) {
+        fprintf(stderr, "Error: Invalid nibble value (must be 0-15)\n");
+        return;
+    }
+
+    // Clear the target nibble first, then set the new value
+    int shift = 4 * pos;                    // Calculate bit position
+    int mask = 0xF << shift;                // Create mask for the nibble
+    fprintf(stderr, "Mask: ");
+    convert_to_binary(mask);
+    r->content &= ~mask;                    // Clear the target nibble
+    fprintf(stderr, "After clearing using mask: ");
+    convert_to_binary(r->content);
+    r->content |= (value << shift);         // Set the new nibble value
+    fprintf(stderr, "After setting: ");
+    convert_to_binary(r->content);
+
+    // post-condition: verify the nibble was set correctly
+    if (((r->content >> shift) & 0xF) != value) {
         fprintf(stderr, "Error: Failed to assign nibble\n");
         return;
     }

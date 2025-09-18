@@ -111,21 +111,22 @@ void setAll(iRegister *);
 int getBit(int, iRegister *);
 
 
-/** @brief Sets the first or the second nibble of iRegister to the given value
+/** @brief Sets the specified nibble of iRegister to the given value
  *
- *  @param nibble value for the nibble
+ *  @param nibble value for the nibble (0-15)
  *
- *  @param pos position to write the nibble
+ *  @param pos position to write the nibble (0-7, each nibble is 4 bits)
  *
  *  @param r Pointer to iRegister
  *
  *  @return void
  *
- *  Pre-condition: 0 <= nibble <= 15, pos == 1 or pos == 2, and iRegister != NULL
+ *  Pre-condition: 0 <= nibble <= 15, 0 <= pos <= 7, and iRegister != NULL
  *
  *  Post-condition: The specified nibble is set to the given value, other bits remain unchanged.
- *                  For pos=1: bits 0-3 are modified
- *                  For pos=2: bits 4-7 are modified
+ *                  For pos=0: bits 0-3 are modified
+ *                  For pos=1: bits 4-7 are modified
+ *                  For pos=2: bits 8-11 are modified, etc.
  *
  *  Properties:
  *  After assignNibble(nibble, pos, r), getNibble(pos, r) == nibble
@@ -133,37 +134,38 @@ int getBit(int, iRegister *);
  *
  *  Test-cases:
  *  1. Allocate memory to an iRegister r, set to 0
- *  2. Call assignNibble(5, 1, &r) to set lower nibble to 5
- *  3. Verify getNibble(1, &r) returns 5
- *  4. Call assignNibble(10, 2, &r) to set upper nibble to 10
- *  5. Verify getNibble(2, &r) returns 10 and getNibble(1, &r) still returns 5
+ *  2. Call assignNibble(5, 0, &r) to set lowest nibble to 5
+ *  3. Verify getNibble(0, &r) returns 5
+ *  4. Call assignNibble(10, 1, &r) to set next nibble to 10
+ *  5. Verify getNibble(1, &r) returns 10 and getNibble(0, &r) still returns 5
  */
 void assignNibble(int, int, iRegister *);
 
 
-/** @brief Gets the first or the second nibble of iRegister
+/** @brief Gets the specified nibble of iRegister
  *
- *  @param pos position to read the nibble
+ *  @param pos position to read the nibble (0-7, each nibble is 4 bits)
  *
  *  @param r Pointer to iRegister
  *
  *  @return int value of the nibble
  *
- *  Pre-condition: pos == 1 or pos == 2, and iRegister != NULL
+ *  Pre-condition: 0 <= pos <= 7, and iRegister != NULL
  *
  *  Post-condition: The iRegister remains unchanged. Returns the value of the nibble.
- *                  For pos=1: returns value of bits 0-3
- *                  For pos=2: returns value of bits 4-7
+ *                  For pos=0: returns value of bits 0-3
+ *                  For pos=1: returns value of bits 4-7
+ *                  For pos=2: returns value of bits 8-11, etc.
  *
  *  Properties:
  *  getNibble(pos, r) returns a value between 0 and 15
  *
  *  Test-cases:
  *  1. Allocate memory to an iRegister r
- *  2. Call assignNibble(7, 1, &r) to set lower nibble to 7
- *  3. Verify getNibble(1, &r) returns 7
- *  4. Call assignNibble(12, 2, &r) to set upper nibble to 12
- *  5. Verify getNibble(2, &r) returns 12
+ *  2. Call assignNibble(7, 0, &r) to set lowest nibble to 7
+ *  3. Verify getNibble(0, &r) returns 7
+ *  4. Call assignNibble(12, 1, &r) to set next nibble to 12
+ *  5. Verify getNibble(1, &r) returns 12
  */
 int getNibble(int, iRegister *);
 
@@ -276,5 +278,17 @@ void shiftLeft(int, iRegister *);
  *    printf("%s",reg2str(r))
  */
 void resetBit(int, iRegister *);
+
+/** @brief Converts an integer to binary string and prints it
+ *
+ *  @param value The integer value to convert to binary
+ *
+ *  @return void (prints directly to stderr)
+ *
+ *  Pre-condition: none
+ *
+ *  Post-condition: Prints 32-bit binary representation to stderr
+ */
+void convert_to_binary(int);
 
 #endif
