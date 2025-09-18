@@ -48,11 +48,7 @@ void resetAll(iRegister *r) {
 
  char* reg2str(iRegister r) {
 
-    // pre-condition
-    if (r == NULL) {
-        fprintf(stderr, "Error: A NULL pointer was given to reg2str\n");
-        return NULL;
-    }
+    // pre-condition - removed NULL check since r is passed by value
 
     // range of two's complement system is -2^(n-1) to 2^(n-1)-1
     // We need to allocate bits + 1 for the null terminator
@@ -71,11 +67,7 @@ void resetAll(iRegister *r) {
         str [31 - i] = (r.content >> i) & 1u ? '1' : '0';
     }
     str[32] = '\0'; // null terminator for string
-    // post-condition
-    if (str == NULL) {
-        fprintf(stderr, "Error: Failed to convert register to string\n");
-        return NULL;
-    }
+    // post-condition - str is static, so this check is removed
     return str;
 }
 
@@ -89,7 +81,7 @@ void shiftRight(int n, iRegister *r){
     // store back
     r->content = (int) temp;
     // post-condition
-    if (r->content != temp) {
+    if (r->content != (int)temp) {
         fprintf(stderr, "Error: Failed to shift right\n");
         return;
     }
@@ -98,6 +90,8 @@ void shiftRight(int n, iRegister *r){
 void shiftLeft(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
+    // store original value for post-condition check
+    int temp = r->content;
     // left shift, fills with 0
     r->content <<= n;
     // post-condition
@@ -156,7 +150,7 @@ int getBit(int i, iRegister *r) {
 
 int getNibble(int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL || pos != 1 && pos != 2) {
+    if (r == NULL || (pos != 1 && pos != 2)) {
         fprintf(stderr, "Error: A NULL pointer was given to getNibble\n");
         return -1;
     }
@@ -170,7 +164,7 @@ int getNibble(int pos, iRegister *r) {
 
 void assignNibble(int value, int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL || pos != 1 && pos != 2) {
+    if (r == NULL || (pos != 1 && pos != 2)) {
         fprintf(stderr, "Error: A NULL pointer was given to assignNibble\n");
         return;
     }

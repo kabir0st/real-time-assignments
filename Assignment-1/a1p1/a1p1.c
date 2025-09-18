@@ -18,10 +18,11 @@ int uart_read_number() {
     char str[LINE];
     char c;
     int i = 0;
-
     while (i < LINE - 1) {
         c = uart_getc();
+        uart_send(c);
         if (c == '\n' || c == '\r') {
+            uart_puts("\n");
             break;
         }
         str[i] = c;
@@ -51,13 +52,11 @@ int main()
 	i = 0;
 	while (i < LINE - 1) {
 		c = uart_getc();
-
-		// Check for newline or carriage return to end input
-		if (c == '\n' || c == '\r') {
+        uart_send(c);
+        if (c == '\n' || c == '\r') {
+            uart_puts("\n");
 			break;
 		}
-
-		// Store character in name array
 		name[i] = c;
 		i++;
 	}
@@ -68,7 +67,7 @@ int main()
 	// Display the entered name
 	uart_puts("Hello, ");
 	uart_puts(name);
-	uart_puts("! Welcome to the Real-Time Embedded Systems course.\n");
+	uart_puts("! Welcome to the A1P1 presentation.\n");
 	uart_puts("--------------------------------\n");
 
 	// Get initial value for register
