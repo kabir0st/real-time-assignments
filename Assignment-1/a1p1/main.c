@@ -32,7 +32,10 @@ int main(){
         }
     }
     r.content = initial_value;
-    shiftRight(1, &r);
-    shiftLeft(1, &r);
+    printf("Nibble 1: %d\n", getNibble(1, &r));
+    printf("Nibble 2: %d\n", getNibble(2, &r));
+    assignNibble(15, 1, &r);
+    printf("Nibble 1: %d\n", getNibble(1, &r));
+    printf("Nibble 2: %d\n", getNibble(2, &r));
     return 0;
 }

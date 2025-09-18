@@ -183,16 +183,12 @@ int getBit(int i, iRegister *r) {
 
 int getNibble(int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL || (pos != 1 && pos != 2)) {
-        fprintf(stderr, "Error: A NULL pointer was given to getNibble\n");
+    if (r == NULL || (pos < 0 || pos > 7)) {
+        fprintf(stderr, "Error in getNibble\n");
         return -1;
     }
     // get the nibble
-    if(pos == 1){
-        return r->content & 0xF; //mask 1111 to get lowest 4 bits
-    }
-     //pos == 2
-    return (r->content >> 4) & 0xF; //shift right 4 and mask 1111 to get bits 4-7
+    return (r->content >> 4*pos) & 0xF; //shift right 4 and mask 1111 to get bits 4-7
 }
 
 void assignNibble(int value, int pos, iRegister *r) {
