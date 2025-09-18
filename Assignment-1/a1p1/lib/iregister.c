@@ -90,11 +90,14 @@ char* reg2str(iRegister r) {
     return str;
 }
 
+
+// for testing and understanding the binary representation of the value
 void convert_to_binary(int value) {
     int bits = sizeof(value) * 8; // usually 32 bits
     char *bin_str = malloc(bits + 1);  // +1 for null terminator
     if (!bin_str) return;         // check allocation
     for (int i = bits - 1; i >= 0; i--) {
+        // check if the bit is set
         bin_str[bits - 1 - i] = (value & (1 << i)) ? '1' : '0';
     }
     bin_str[bits] = '\0'; // null terminate the string
