@@ -46,7 +46,7 @@ void resetAll(iRegister *r) {
     }
 }
 
- char* reg2str(iRegister r) {
+char* reg2str(iRegister r) {
 
     // pre-condition - removed NULL check since r is passed by value
 
@@ -67,33 +67,66 @@ void resetAll(iRegister *r) {
         str [31 - i] = (r.content >> i) & 1u ? '1' : '0';
     }
     str[32] = '\0'; // null terminator for string
-    // post-condition - str is static, so this check is removed
+
+    // post-condition: verify the string is properly formatted
+    if ( str[32] != '\0') {
+        fprintf(stderr, "Error: Failed to create proper string representation\n");
+        return NULL;
+    }
+    // post-condition: verify string length is exactly 32 characters
+    int len = 0;
+    for (int i = 0; i < 32; i++) {
+        if (str[i] != '0' && str[i] != '1') {
+            fprintf(stderr, "Error: Invalid character in binary string\n");
+            return NULL;
+        }
+        len++;
+    }
+    if (len != 32) {
+        fprintf(stderr, "Error: String length is not 32 characters\n");
+        return NULL;
+    }
+
     return str;
+}
+
+void convert_to_binary(int value) {
+    int bits = sizeof(value) * 8; // usually 32 bits
+    char *bin_str = malloc(bits + 1);  // +1 for null terminator
+    if (!bin_str) return;         // check allocation
+    for (int i = bits - 1; i >= 0; i--) {
+        bin_str[bits - 1 - i] = (value & (1 << i)) ? '1' : '0';
+    }
+    bin_str[bits] = '\0'; // null terminate the string
+    fprintf(stderr, "Binary string: %s\n", bin_str);
 }
 
 void shiftRight(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
-     // cast to unsigned to ensure logical shift
-    unsigned int temp = (unsigned int) r->content;
+    int temp = (int) r->content;
+    fprintf(stderr, "Shift right B : ");
+    convert_to_binary(temp);
     // logical shift, fills with 0
     temp >>= n;
+    fprintf(stderr, "Shift right A : ");
+    convert_to_binary(temp);
     // store back
     r->content = (int) temp;
     // post-condition
-    if (r->content != (int)temp) {
-        fprintf(stderr, "Error: Failed to shift right\n");
-        return;
-    }
 }
 
 void shiftLeft(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
     // store original value for post-condition check
+    fprintf(stderr, "Shift left B : ");
+    convert_to_binary(r->content);
     int temp = r->content;
     // left shift, fills with 0
     r->content <<= n;
+    fprintf(stderr, "Shift left A : ");
+    convert_to_binary(r->content);
     // post-condition
     if (r->content != (temp << n)) {
         fprintf(stderr, "Error: Failed to shift left\n");

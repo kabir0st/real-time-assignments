@@ -1,48 +1,52 @@
-# Makefile for Raspberry Pi 3
-# Updated by Wagner Morais Aug 22
+# Simple Makefile for compiling and testing main.c
 
-MAINFILE = a1p1
+# Compiler and flags
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -g
+LDFLAGS =
 
-OBJS	=  lib/iregister.o
-OBJS	+= lib/uart.o lib/rpi-armtimer.o lib/rpi-gpio.o lib/rpi-interrupts.o lib/rpi-systimer.o
-OBJS	+= lib/startup.o lib/syscalls.o
-OBJS	+= $(MAINFILE).o
+# Target executable name
+TARGET = main
 
-ELF		= $(MAINFILE).elf
-MAIN	= $(MAINFILE).img
+# Source files
+MAIN_SRC = main.c
+LIB_SRC = lib/iregister.c
 
-CROSS	= arm-none-eabi-
-CC		= $(CROSS)gcc
-AS		= $(CROSS)as
-SIZE	= $(CROSS)size
-OCOPY	= $(CROSS)objcopy
+# Object files
+MAIN_OBJ = main.o
+LIB_OBJ = lib/iregister.o
 
+# Default target
+all: $(TARGET)
 
-# CFLAGS	= -march=armv8-a -mcpu=cortex-a53 -mfpu=vfp -mfloat-abi=soft -ffunction-sections -fdata-sections -fno-common -g -std=gnu99 -Wall -Wextra -Os -Ilib -DRPI3=1 -DIOBPLUS=1
-CFLAGS	= -march=armv8-a+crc -mtune=cortex-a53 -mfpu=vfp -mfloat-abi=soft -ffunction-sections -fdata-sections -fno-common -g -std=gnu99 -Wall -Wextra -Os -Ilib -DRPI3=1 -DIOBPLUS=1
+# Build the main executable
+$(TARGET): $(MAIN_OBJ) $(LIB_OBJ)
+	$(CC) $(MAIN_OBJ) $(LIB_OBJ) -o $(TARGET) $(LDFLAGS)
 
-LFLAGS	= -static -nostartfiles -lc -lgcc -specs=nano.specs -Wl,--gc-sections -lm
-LSCRIPT	= lib/rpi3.ld
+# Compile main.c
+$(MAIN_OBJ): $(MAIN_SRC) lib/iregister.h
+	$(CC) $(CFLAGS) -c $(MAIN_SRC) -o $(MAIN_OBJ)
 
-LDFLAGS	+= -u _printf_float
+# Compile lib/iregister.c
+$(LIB_OBJ): $(LIB_SRC) lib/iregister.h
+	$(CC) $(CFLAGS) -c $(LIB_SRC) -o $(LIB_OBJ)
 
-.PHONY: all clean run
+# Test target - runs the program
+test: $(TARGET)
+	@echo "Running $(TARGET)..."
+	./$(TARGET)
 
-all: $(MAIN)
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $^
-
-$(ELF): $(OBJS)
-	$(CC) -T $(LSCRIPT) $(CFLAGS) $(LFLAGS) $(LDFLAGS) -o $@ $^
-	$(SIZE) $@
-
-$(MAIN): $(ELF)
-	$(OCOPY) $< -O binary $@
-
+# Clean up object files and executable
 clean:
-#   OS dependent. Change accordingly
-#	del /Q /F $(MAIN) $(ELF) $(OBJS)
-#	rm -f $(MAIN) $(ELF) $(OBJS)
+	rm -f $(MAIN_OBJ) $(LIB_OBJ) $(TARGET)
 
-run: $(MAIN)
+# Phony targets
+.PHONY: all test clean
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  all     - Build the executable (default)"
+	@echo "  test    - Build and run the program"
+	@echo "  clean   - Remove object files and executable"
+	@echo "  help    - Show this help message"
