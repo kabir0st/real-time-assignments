@@ -12,7 +12,7 @@ void resetBit(int i, iRegister *r)
 		return;
 	}
 	// pre-condition
-	if( i < 0 || i > 31)
+	if( i <= 0 || i >= 31)
 	{
 		fprintf(stderr,"Error: Invalid bit\n");
 		return;
@@ -101,7 +101,10 @@ void convert_to_binary(int value) {
 
 void shiftRight(int n, iRegister *r){
     // pre-condition
-    if (r == NULL || n < 0 || n > 31) return;
+    if (r == NULL || n <= 0 || n >= 31) {
+        fprintf(stderr, "Error: Invalid shift amount or NULL pointer\n");
+        return;
+    };
     // we did a arthematic shift right
     // so we can preseve the sign value of the
     // number, if we needed to preserve the structure
@@ -120,7 +123,10 @@ void shiftRight(int n, iRegister *r){
 
 void shiftLeft(int n, iRegister *r){
     // pre-condition
-    if (r == NULL || n < 0 || n > 31) return;
+    if (r == NULL || n <= 0 || n >= 31) {
+        fprintf(stderr, "Error: Invalid shift amount or NULL pointer\n");
+        return;
+    };
     // left shift, fills with 0
     int old_value = r->content;
 
@@ -136,8 +142,8 @@ void shiftLeft(int n, iRegister *r){
 
 void setBit(int i, iRegister *r) {
     // pre-condition
-    if (r == NULL || i < 0 || i > 31) {
-        fprintf(stderr, "Error: A NULL pointer was given to setBit\n");
+    if (r == NULL || i <= 0 || i >= 31) {
+        fprintf(stderr, "Error: A NULL pointer or invalid bit was given to setBit\n");
         return;
     }
     // pre-condition
@@ -172,8 +178,8 @@ void setAll(iRegister *r) {
 
 int getBit(int i, iRegister *r) {
     // pre-condition
-    if (r == NULL || i < 0 || i > 31) {
-        fprintf(stderr, "Error: A NULL pointer was given to getBit\n");
+    if (r == NULL || i <= 0 || i >= 31) {
+        fprintf(stderr, "Error: A NULL pointer or invalid bit was given to getBit\n");
         return -1;
     }
     // pre-condition
@@ -183,7 +189,7 @@ int getBit(int i, iRegister *r) {
 
 int getNibble(int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL || (pos < 0 || pos > 7)) {
+    if (r == NULL || (pos <= 0 || pos >= 7)) {
         fprintf(stderr, "Error in getNibble\n");
         return -1;
     }
@@ -194,12 +200,12 @@ int getNibble(int pos, iRegister *r) {
 
 void assignNibble(int value, int pos, iRegister *r) {
     // pre-condition
-    if (r == NULL || (pos < 0 || pos > 7)) {
+    if (r == NULL || (pos <= 0 || pos >= 7)) {
         fprintf(stderr, "Error: Invalid parameters given to assignNibble\n");
         return;
     }
     // pre-condition: check if value is valid nibble (0-15)
-    if (value < 0 || value > 15) {
+    if (value <= 0 || value >= 15) {
         fprintf(stderr, "Error: Invalid nibble value (must be 0-15)\n");
         return;
     }
