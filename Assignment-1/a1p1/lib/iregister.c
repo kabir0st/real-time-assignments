@@ -1,8 +1,3 @@
-//  Created by Mohammadreza Mousavi [mohmou] on 9/5/14.
-//  Updated by Masoumeh Taromirad on 11/08/16.
-//  Updated by Wagner Morais and Johannes van Esch on 28/08/18.
-//  Updated by Wagner Morais and Hazem Ali on 26/08/21.
-//  Copyright (c) 2014 by Mohammadreza Mousavi [mohmou]. All rights reserved.
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -86,7 +81,6 @@ char* reg2str(iRegister r) {
         fprintf(stderr, "Error: String length is not 32 characters\n");
         return NULL;
     }
-
     return str;
 }
 
@@ -108,26 +102,36 @@ void convert_to_binary(int value) {
 void shiftRight(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
-    fprintf(stderr, "Shift right B : ");
-    convert_to_binary(r->content);
+    // we did a arthematic shift right
+    // so we can preseve the sign value of the
+    // number, if we needed to preserve the structure
+    // (addeding 0 to the left instaed of 1 ) we would
+    // tyepcast the r->content to unsigned int
+    // and then shift right
+    int old_value = r->content;
+
     r->content >>= n;
-    fprintf(stderr, "Shift right A : ");
-    convert_to_binary(r->content);
-    // store back
-    r->content = (int) r->content;
-    // post-condition
+    // post-condition: simple verification
+    if (r->content != (old_value >> n)) {
+        fprintf(stderr, "Error: Failed to shift right\n");
+        return;
+    }
 }
 
 void shiftLeft(int n, iRegister *r){
     // pre-condition
     if (r == NULL || n < 0 || n > 31) return;
-    fprintf(stderr, "Shift left B : ");
-    convert_to_binary(r->content);
     // left shift, fills with 0
+    int old_value = r->content;
+
     r->content <<= n;
-    fprintf(stderr, "Shift left A : ");
-    convert_to_binary(r->content);
     // post-condition
+
+    // post-condition
+    if (r->content != (old_value << n)) {
+        fprintf(stderr, "Error: Failed to shift left\n");
+        return;
+    }
 }
 
 void setBit(int i, iRegister *r) {
@@ -184,9 +188,8 @@ int getNibble(int pos, iRegister *r) {
         return -1;
     }
     // get the nibble
-    printf("Getting processing : ");
-    convert_to_binary(r->content >> 4*pos);
     return (r->content >> 4*pos) & 0xF; //shift right 4 and mask 1111 to get bits 4-7
+    // no post-condition because register is not modified
 }
 
 void assignNibble(int value, int pos, iRegister *r) {
@@ -204,18 +207,13 @@ void assignNibble(int value, int pos, iRegister *r) {
     // Clear the target nibble first, then set the new value
     int shift = 4 * pos;                    // Calculate bit position
     int mask = 0xF << shift;                // Create mask for the nibble
-    fprintf(stderr, "Mask: ");
-    convert_to_binary(mask);
     r->content &= ~mask;                    // Clear the target nibble
-    fprintf(stderr, "After clearing using mask: ");
-    convert_to_binary(r->content);
     r->content |= (value << shift);         // Set the new nibble value
-    fprintf(stderr, "After setting: ");
-    convert_to_binary(r->content);
 
-    // post-condition: verify the nibble was set correctly
-    if (((r->content >> shift) & 0xF) != value) {
-        fprintf(stderr, "Error: Failed to assign nibble\n");
+    // post-condition: verify the nibble was set correctly using getNibble
+    int retrieved_value = getNibble(pos, r);
+    if (retrieved_value != value) {
+        fprintf(stderr, "Error: Failed to assign nibble. Expected %d, got %d\n", value, retrieved_value);
         return;
     }
 }

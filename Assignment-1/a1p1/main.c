@@ -35,6 +35,18 @@ int main(){
     printf("Initial value: %d\n", initial_value);
     // Test left shift function
     r.content = initial_value;
+    // Test left shift using the function defined in iregister.h
+    printf("Testing left shift by 2 using leftShift:\n");
+    shiftLeft(2, &r);
+    printf("After left shift, value: %d\n", r.content);
+    printf("Binary: %s\n", reg2str(r));
+
+    // Test right shift using the function defined in iregister.h
+    printf("Testing right shift by 1 using rightShift:\n");
+    shiftRight(1, &r);
+    printf("After right shift, value: %d\n", r.content);
+    printf("Binary: %s\n", reg2str(r));
+
 
 
     assignNibble(7, 3, &r);  // Set lowest nibble to 15

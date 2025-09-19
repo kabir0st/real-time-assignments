@@ -172,12 +172,12 @@ int getNibble(int, iRegister *);
 
 /** @brief Returns a pointer to an array of 32 characters representing the iRegister in binary
  *
- *  @param r Pointer to iRegister
+ *  @param r iRegister (passed by value)
  *
  *  @return char* A pointer to a static string containing 32 characters ('0' or '1')
  *                representing each bit of the iRegister. The string is null-terminated.
  *
- *  Pre-condition: iRegister != NULL
+ *  Pre-condition: None (parameter passed by value)
  *
  *  Post-condition: Returns a string representation of the binary of iRegister
  *
@@ -194,7 +194,7 @@ int getNibble(int, iRegister *);
 char *reg2str(iRegister);
 
 
-/** @brief Shifts all the bits of the iRegister to the right by n places (logical shift)
+/** @brief Shifts all the bits of the iRegister to the right by n places (arithmetic shift)
  *
  *  @param n The number of positions to shift right (0-31)
  *
@@ -204,13 +204,14 @@ char *reg2str(iRegister);
  *
  *  Pre-condition: 0 <= n <= 31 and iRegister != NULL
  *
- *  Post-condition: All bits are shifted right by n positions. Leftmost n bits become 0.
- *                  This is a logical shift that always fills with zeros from the left.
+ *  Post-condition: All bits are shifted right by n positions. For positive numbers,
+ *                  leftmost n bits become 0. For negative numbers, leftmost n bits
+ *                  are filled with 1s (sign extension).
  *
  *  Properties:
  *  After shiftRight(n, r), the rightmost n bits are lost
- *  The leftmost n bits become 0
- *  For positive numbers: equivalent to integer division by 2^n
+ *  For positive numbers: leftmost n bits become 0, equivalent to integer division by 2^n
+ *  For negative numbers: leftmost n bits become 1 (sign extension)
  *
  *  Test-cases:
  *  1. Create iRegister r with content = 8 (binary: 1000)
@@ -218,7 +219,7 @@ char *reg2str(iRegister);
  *  3. Verify content becomes 4 (binary: 0100)
  *  4. Create iRegister r with content = -8
  *  5. Call shiftRight(1, &r)
- *  6. Verify result is a large positive number (logical shift fills with 0s)
+ *  6. Verify result is -4 (arithmetic shift preserves sign)
  */
 void shiftRight(int, iRegister *);
 
@@ -241,7 +242,7 @@ void shiftRight(int, iRegister *);
  *  After shiftLeft(n, r), the leftmost n bits are lost
  *  The rightmost n bits become 0
  *  For positive numbers without overflow: equivalent to multiplication by 2^n
- *  For negative numbers without overflow: equivalent to division by 2^n
+ *  For negative numbers without overflow: equivalent to multiplication by 2^n
  *
  *  Test-cases:
  *  1. Create iRegister r with content = 4 (binary: 0100)
