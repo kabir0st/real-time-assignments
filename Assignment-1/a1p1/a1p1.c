@@ -76,7 +76,9 @@ int main()
 	r.content = initial_value;
 
 	uart_puts("Initial Value: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
@@ -85,26 +87,34 @@ int main()
 	bit_pos = uart_read_number();
 
 	uart_puts("Before reset: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	resetBit(bit_pos, &r);
 
 	uart_puts("After reset: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+	uart_puts(s);
+	free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
 	// Test resetAll
 	r.content = initial_value;
 	uart_puts("Testing resetAll - Before: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	resetAll(&r);
 
 	uart_puts("After resetAll: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
@@ -114,26 +124,34 @@ int main()
 	bit_pos = uart_read_number();
 
 	uart_puts("Before set: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	setBit(bit_pos, &r);
 
 	uart_puts("After set: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
 	// Test setAll
 	r.content = 0;
 	uart_puts("Testing setAll - Before: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	setAll(&r);
 
 	uart_puts("After setAll: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
@@ -143,7 +161,9 @@ int main()
 	bit_pos = uart_read_number();
 
 	uart_puts("Register: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	print2uart("Bit at position %d: %d\n", bit_pos, getBit(bit_pos, &r));
 	uart_puts("--------------------------------\n");
@@ -152,7 +172,9 @@ int main()
 	r.content = initial_value;
 	uart_puts("Testing nibble operations:\n");
 	uart_puts("Register: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	print2uart("Lower nibble (pos 1): %d\n", getNibble(1, &r));
 	print2uart("Upper nibble (pos 2): %d\n", getNibble(2, &r));
@@ -161,14 +183,18 @@ int main()
 	nibble_val = uart_read_number();
 	assignNibble(nibble_val, 1, &r);
 	uart_puts("After setting lower nibble: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	uart_puts("Enter value for upper nibble (0-15): ");
 	nibble_val = uart_read_number();
 	assignNibble(nibble_val, 2, &r);
 	uart_puts("After setting upper nibble: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
@@ -176,21 +202,27 @@ int main()
 	r.content = initial_value;
 	uart_puts("Testing shift operations:\n");
 	uart_puts("Initial: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	uart_puts("Enter positions to shift left: ");
 	shift_val = uart_read_number();
 	shiftLeft(shift_val, &r);
 	uart_puts("After left shift: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 
 	uart_puts("Enter positions to shift right: ");
 	shift_val = uart_read_number();
 	shiftRight(shift_val, &r);
 	uart_puts("After right shift: ");
-	uart_puts(reg2str(r));
+    char *s = reg2str(r);
+    uart_puts(s);
+    free(s);
 	print2uart(" = %d\n", r.content);
 	uart_puts("--------------------------------\n");
 
