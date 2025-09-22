@@ -141,7 +141,7 @@
 	},
 
 	// Workspace Settings
-	"workbench.colorTheme": "Default Dark+",
+	"workbench.colorTheme": "Dracula Theme",
 	"workbench.iconTheme": "vs-seti",
 	"workbench.editor.enablePreview": false,
 

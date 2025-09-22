@@ -51,9 +51,9 @@ char* reg2str(iRegister r) {
     // null termination is used to add a null character at the end of the string
     // this is used to indicate the end of the string
     // avoid undefined behavior among other things
-
+    printf("r.content: %d\n", r.content);
     static char str[33]; // allocate 33 characters, 32 bits + null terminator
-
+    printf("str: %s\n", &str);
     for (int i = 31; i >= 0; i--) {
         // doing right shift from the MSB to the LSB
         // and then checking if the bit is set

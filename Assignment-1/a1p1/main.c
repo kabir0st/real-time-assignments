@@ -5,54 +5,17 @@
 int main(){
 
     iRegister r;
-    int initial_value;
-    char input_buffer[100];
-    int valid_input = 0;
+    iRegister e;
+    r.content = 85;
+    e.content = 2;
 
-    printf("--------------------------------\n");
-    printf("Initial value in decimal (or press Enter for default 1010101 binary = 85 decimal): ");
-
-    // Get user input as string to handle empty input and invalid characters
-    while (!valid_input) {
-        if (fgets(input_buffer, sizeof(input_buffer), stdin) != NULL) {
-            // Check if user just pressed Enter (empty input)
-            if (input_buffer[0] == '\n') {
-                initial_value = 85; // 1010101 in binary = 85 in decimal
-                printf("Initial value set to 85 (1010101 in binary)\n");
-                valid_input = 1;
-            } else {
-                // Try to parse the input as integer
-                if (sscanf(input_buffer, "%d", &initial_value) == 1) {
-                    printf("Initial value set to %d\n", initial_value);
-                    valid_input = 1;
-                } else {
-                    printf("Invalid input! Please enter a valid integer or press Enter for default: ");
-                }
-            }
-        }
-    }
-
-    printf("Initial value: %d\n", initial_value);
-    // Test left shift function
-    r.content = initial_value;
-    // Test left shift using the function defined in iregister.h
-    printf("Testing left shift by 2 using leftShift:\n");
-    shiftLeft(2, &r);
-    printf("After left shift, value: %d\n", r.content);
-    printf("Binary: %s\n", reg2str(r));
-
-    // Test right shift using the function defined in iregister.h
-    printf("Testing right shift by 1 using rightShift:\n");
-    shiftRight(1, &r);
-    printf("After right shift, value: %d\n", r.content);
-    printf("Binary: %s\n", reg2str(r));
-
-
-
-    assignNibble(7, 3, &r);  // Set lowest nibble to 15
-
-    int nibble0 = getNibble(3, &r);
-    printf("Nibble: %d\n", nibble0);
-    convert_to_binary(nibble0);
-    return 0;
+    printf("%s %s  \n", reg2str(r),  reg2str(e));
+    // this works but another does not
+    // because it only gets the address and when
+    // printing the printf access the address
+    // not the value, it doesn't copy the current value
+    // to it's buffer, it uses what is in the address
+    // and not the current value
+    printf("%s  \n", reg2str(r));
+    printf("%s  \n", reg2str(e));
 }
