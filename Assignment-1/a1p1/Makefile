@@ -1,52 +1,48 @@
-# Simple Makefile for compiling and testing main.c
+# Makefile for Raspberry Pi 3
+# Updated by Wagner Morais Aug 22
 
-# Compiler and flags
-CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -g
-LDFLAGS =
+MAINFILE = a1p1
 
-# Target executable name
-TARGET = main
+OBJS	=  lib/iregister.o
+OBJS	+= lib/uart.o lib/rpi-armtimer.o lib/rpi-gpio.o lib/rpi-interrupts.o lib/rpi-systimer.o
+OBJS	+= lib/startup.o lib/syscalls.o
+OBJS	+= $(MAINFILE).o
 
-# Source files
-MAIN_SRC = main.c
-LIB_SRC = lib/iregister.c
+ELF		= $(MAINFILE).elf
+MAIN	= $(MAINFILE).img
 
-# Object files
-MAIN_OBJ = main.o
-LIB_OBJ = lib/iregister.o
+CROSS	= arm-none-eabi-
+CC		= $(CROSS)gcc
+AS		= $(CROSS)as
+SIZE	= $(CROSS)size
+OCOPY	= $(CROSS)objcopy
 
-# Default target
-all: $(TARGET)
 
-# Build the main executable
-$(TARGET): $(MAIN_OBJ) $(LIB_OBJ)
-	$(CC) $(MAIN_OBJ) $(LIB_OBJ) -o $(TARGET) $(LDFLAGS)
+# CFLAGS	= -march=armv8-a -mcpu=cortex-a53 -mfpu=vfp -mfloat-abi=soft -ffunction-sections -fdata-sections -fno-common -g -std=gnu99 -Wall -Wextra -Os -Ilib -DRPI3=1 -DIOBPLUS=1
+CFLAGS	= -march=armv8-a+crc -mtune=cortex-a53 -mfpu=vfp -mfloat-abi=soft -ffunction-sections -fdata-sections -fno-common -g -std=gnu99 -Wall -Wextra -Os -Ilib -DRPI3=1 -DIOBPLUS=1
 
-# Compile main.c
-$(MAIN_OBJ): $(MAIN_SRC) lib/iregister.h
-	$(CC) $(CFLAGS) -c $(MAIN_SRC) -o $(MAIN_OBJ)
+LFLAGS	= -static -nostartfiles -lc -lgcc -specs=nano.specs -Wl,--gc-sections -lm
+LSCRIPT	= lib/rpi3.ld
 
-# Compile lib/iregister.c
-$(LIB_OBJ): $(LIB_SRC) lib/iregister.h
-	$(CC) $(CFLAGS) -c $(LIB_SRC) -o $(LIB_OBJ)
+LDFLAGS	+= -u _printf_float
 
-# Test target - runs the program
-test: $(TARGET)
-	@echo "Running $(TARGET)..."
-	./$(TARGET)
+.PHONY: all clean run
 
-# Clean up object files and executable
+all: $(MAIN)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+$(ELF): $(OBJS)
+	$(CC) -T $(LSCRIPT) $(CFLAGS) $(LFLAGS) $(LDFLAGS) -o $@ $^
+	$(SIZE) $@
+
+$(MAIN): $(ELF)
+	$(OCOPY) $< -O binary $@
+
 clean:
-	rm -f $(MAIN_OBJ) $(LIB_OBJ) $(TARGET)
+#   OS dependent. Change accordingly
+#	del /Q /F $(MAIN) $(ELF) $(OBJS)
+#	rm -f $(MAIN) $(ELF) $(OBJS)
 
-# Phony targets
-.PHONY: all test clean
-
-# Help target
-help:
-	@echo "Available targets:"
-	@echo "  all     - Build the executable (default)"
-	@echo "  test    - Build and run the program"
-	@echo "  clean   - Remove object files and executable"
-	@echo "  help    - Show this help message"
+run: $(MAIN)

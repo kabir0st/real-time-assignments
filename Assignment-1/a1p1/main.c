@@ -3,7 +3,6 @@
 #include "lib/iregister.h"
 
 int main(){
-
     iRegister r;
     iRegister e;
     r.content = 85;
