@@ -13,9 +13,9 @@
 #include <string.h>
 #include "rpi-gpio.h"
 #include "piface.h"
-	
-int cnt;	
-	
+
+int cnt;
+
 /* Bit-Banging SPI Driver */
 static void spi_init(void){
 	RPI_GetGpio()->GPFSEL0 |= (1 << 21);				// GPIO  7,  9
@@ -26,12 +26,12 @@ static void spi_init(void){
 
 static void spi_start(void){
 	/* /CE low  */
-	RPI_GetGpio()->GPCLR0 = (1 << 7);			        
+	RPI_GetGpio()->GPCLR0 = (1 << 7);
 }
 
 static void spi_stop(void){
 	/* /CE high */
-	RPI_GetGpio()->GPSET0 = (1 << 7);			        
+	RPI_GetGpio()->GPSET0 = (1 << 7);
 }
 
 static void spi_byte(const uint8_t out, uint8_t *in){
@@ -113,7 +113,7 @@ static uint8_t lcd_read_busy_flag_register(){
 }
 
 static void lcd_busy_wait(){
-	while (lcd_read_busy_flag_register() & 0x80); 
+	while (lcd_read_busy_flag_register() & 0x80);
 }
 
 static void lcd_pulse(uint8_t val){
@@ -124,9 +124,9 @@ static void lcd_pulse(uint8_t val){
 // static void lcd_write_cmd(uint8_t cmd){
     // lcd_busy_wait();
 	// write high nibble
-	// lcd_pulse( LCD_BL | (cmd >> 4) );				
+	// lcd_pulse( LCD_BL | (cmd >> 4) );
 	// write low nibble
-    // lcd_pulse( LCD_BL | (cmd & 0x0F) );    			
+    // lcd_pulse( LCD_BL | (cmd & 0x0F) );
     // LCD_DELAY;
 // }
 
@@ -195,13 +195,13 @@ void piface_putc(char c){
 	} else {
 		if(cnt%32==0){
 			lcd_write_cmd(0x02);
-			LCD_DELAY;	
+			LCD_DELAY;
 			cnt = 0;
 		} else {
 			if (c=='\n') {
 				if (cnt > 16) {
 					lcd_write_cmd(0x02);
-					LCD_DELAY;	
+					LCD_DELAY;
 					cnt = 0;
 				}
 				else {
@@ -242,7 +242,7 @@ void piface_clear(void)
 
 
 /*
-    The methods below are expected to be implemented and used 
+    The methods below are expected to be implemented and used
 	during Assignments 2, 3 and 4.
 */
 
@@ -261,14 +261,14 @@ void piface_set_cursor(uint8_t col, uint8_t row)
  *  Suppose that you decided to segment the display into 4 segments of 8 digits each.
  *  For example, the illustration below ...
  *      ------------------
- *      |S0:XXXXXS1:XXXXX| 
+ *      |S0:XXXXXS1:XXXXX|
  *      |S2:XXXXXS3:XXXXX|
- *      ------------------ 
+ *      ------------------
  *  shows each segment (seg:0...3) with digits each.
  *  @param int seg Is the segment, i.e., 0: top left, 1:top right, 2: bottom left and 3: bottom right.
  *  @param int num Is the integer input parameter to be displayed.
  *  Pre-condition: 0<=seg<=3
- 
+
  *  NOTE: maybe, you want to display arbitrary content on a given segment. For example:
  *      printAtSeg(1, "S%i: %.1f", 1, 3.14);
  *  This requires the use of variadic arguments with proper string formatting.
@@ -288,5 +288,5 @@ void print_at_seg(int seg, int num) {
  *     void printAtSeg(int seg, const char* fmt, ...);
  */
 void printf_at_seg(int seg, const char* fmt, ...) {
-    // The implementation is optional.	
+    // The implementation is optional.
 }
