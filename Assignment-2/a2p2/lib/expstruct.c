@@ -55,19 +55,17 @@ double calculate_exponential(int x){
     }
     int term = 0; // first term is always 1
     double sum = 0;
-    double calculated = 0;
+    double dx = 0;
     while (term < 100){
-        calculated = power(x, term) / calculate_factorial(term);
-        if (calculated < 0.01 ) // stop if less than 2 decimal points
+        dx = power(x, term) / calculate_factorial(term);
+        if (dx < 0.01 ) // stop if less than 2 decimal points
         {
-            printf("Decimal precision reached\n");
+            // printf("Decimal precision reached\n");
             break;
         }
-        printf("Term: %d -> %f\n", term, calculated);
-        sum += calculated;
+        sum += dx;
         term++;
     }
-    printf("Exponential calculated: %f\n", sum);
     return sum;
 }
 
@@ -78,8 +76,19 @@ ExpStruct *iexp(int x){
     }
     ExpStruct *e = malloc(sizeof(ExpStruct));
     double result = calculate_exponential(x);
-    printf("Exponential calculated: %f\n", result);
     e->expInt = (int)result;
     e->expFraction = (int)((result - e->expInt) * 100);
+
+    // Post-condition: Ensure the structure contains valid values
+    if (e->expInt != (int)result) {
+        printf("Post-condition failed: expInt is incorrect\n");
+        free(e);
+        return NULL;
+    }
+    if (e->expFraction != (int)((result - e->expInt) * 100)) {
+        printf("Post-condition failed: expFraction is incorrect\n");
+        free(e);
+        return NULL;
+    }
     return e;
 }

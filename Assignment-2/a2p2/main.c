@@ -16,9 +16,12 @@
 int main()
 {
     printf("Hello\n");
-    ExpStruct *exp = iexp(5);
-    printf("expInt: %d, expFraction: %d\n", exp->expInt, exp->expFraction);
-    free(exp);
+    ExpStruct *exp_result;
+    for (int i = 0; i <= 20; i++) {
+        exp_result = iexp(i);
+        printf("x = %d : Exp Aprox: %d.%d\n", i, exp_result->expInt, exp_result->expFraction);
+    }
+    free(exp_result);
     return 0;
 	// char str[LINE];
 	// piface_init();
