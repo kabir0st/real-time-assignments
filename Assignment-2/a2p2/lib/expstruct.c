@@ -40,6 +40,8 @@ double calculate_factorial(int x){
     return result;
 }
 
+// implemented power function to avoid
+// using math.h library
 double power(int base, int exponent) {
     double result = 1;
     for (int i = 0; i < exponent; i++) {
@@ -70,7 +72,7 @@ double calculate_exponential(int x){
 }
 
 ExpStruct *iexp(int x){
-    if (x < 0 || x > 20) {
+    if (x <= 0 || x >= 20) {
         printf("Input out of range\n");
         return NULL;
     }
