@@ -12,10 +12,14 @@
 #include <stdio.h>
 #include "led.h"
 #include "expstruct.h"
+#include "rpi-systimer.h"
+
+#define DELAY 20000
 
 ExpStruct *iexp(int x){
 	ExpStruct *e = malloc(sizeof(ExpStruct));
-    static int total_iterations;
+    extern int total_iterations;
+
     // pre condition check
     if (x < 0 || x > 20) {
         e->expInt = 0;
@@ -25,11 +29,6 @@ ExpStruct *iexp(int x){
     if (x == 0) {
         e->expInt = 1;     // e^0 = 1
         e->expFraction = 0;
-        // setting it to one since
-        // it will the 1st one to execute
-        // and will initiate the count
-        // and clear any values from the address
-        total_iterations = 1;
         return e;
     }
 
@@ -43,19 +42,34 @@ ExpStruct *iexp(int x){
         term *= (double)x / (double)k;  // term_k = term_{k-1} * x/k
         sum += term;
 		total_iterations++;
-        if (total_iterations > 10){
+        // this is not a ideal approach as this intentionally
+        // limits the performance of the function
+        // but it's just to show the values on the piface
+        // after the calculation of e^x.
+        RPI_WaitMicroSeconds(DELAY);
+
+        // we can use a cached array to store the values
+        // of e^x for x = 0 to 20 to avoid recalculating
+        // them again, but the assignment does not
+        // specify that we can do that, so we are
+        // calculating them every time.
+
+        // and we can use the same cached array to show the values
+        // on the piface and handle the clearing of the display
+        // separately so we won't have to use the delay, but I am
+        // not sure if we are supposed to do that so eh.
+
+        if (total_iterations > 50){
             // toggling every 100 total iteration used
             // by all calls to iexp
             led_toggle();
             // reseting iteration after toggling
             total_iterations = 0;
         }
-
         if (term < EPS_FOR_2DP) {
             break;
         }
     }
-	// printf("Total iterations so far: %d\n", total_iterations);
 
     /* Split into integer + two-decimal fractional parts with rounding. */
     long long scaled = (long long)(sum * 100.0 + 0.5);  // rounded to 2 dp
