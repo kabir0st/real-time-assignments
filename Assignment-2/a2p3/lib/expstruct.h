@@ -40,7 +40,7 @@ typedef struct expState ExpProgramState;
  *                    or memory allocation fails.
  *
  */
-ExpProgramState *iexp(ExpProgramState *cur_state);
+ExpProgramState *iexp(ExpProgramState *cur_state, int ITERATION_LIMIT);
 
 
 /**

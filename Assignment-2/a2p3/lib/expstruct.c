@@ -16,7 +16,7 @@
 const int TERM_LIMIT = 100;
 const double EPS_FOR_2DP = 0.005;  // conservative for rounding to 2 decimals
 
-ExpProgramState *iexp(ExpProgramState *c_state) {
+ExpProgramState *iexp(ExpProgramState *c_state, int ITERATION_LIMIT) {
     // pre condition check
     // if the check logic was long could have
     // skipped using a flag on state.
@@ -36,8 +36,10 @@ ExpProgramState *iexp(ExpProgramState *c_state) {
     if (c_state->completed) {
         return c_state;  // already computed
     }
+    printf("%d\n", c_state->n);
 
-    for (int n = c_state->n; n < TERM_LIMIT; ++n) {
+    for (int n = c_state->n; n < c_state->n+ITERATION_LIMIT; ++n) {
+        printf("%d\n", n);
         c_state->last_calculated_term *= (double)c_state->x / (double)n;
         c_state->n_sum += c_state->last_calculated_term;
         if (c_state->last_calculated_term < EPS_FOR_2DP) {

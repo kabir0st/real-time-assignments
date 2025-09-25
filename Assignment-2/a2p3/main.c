@@ -61,7 +61,7 @@ void initialize_exp_state(ExpProgramState *state) {
 }
 
 void update_state_after_success_complete(ExpProgramState *state) {
-    if (state-> x >=20) {
+    if (state-> x >=2) {
         return;
     }
     (state->x)++;  // Start computing from e^1
@@ -93,13 +93,11 @@ int main()
         // artificial delay cause otherwise the led toggles too fast
         // check if the led needs to be toggled
         check_led(&led_state, &timer);
-        for (int i = 0; i < ITERATION_BATCH_SIZE && !state->completed; i++) {
-            iexp(state);
-            if (state->completed) {
-                printf("e^%d = %d.%02d (computed with %d terms)\n", state->x, state->n_exp_int, state->n_exp_fraction, state->n);
-                update_state_after_success_complete(state);
-                break;
-            }
+        iexp(state, ITERATION_BATCH_SIZE);
+        if (state->completed) {
+            printf("e^%d = %d.%02d (computed with %d terms)\n", state->x, state->n_exp_int, state->n_exp_fraction, state->n);
+            update_state_after_success_complete(state);
+            break;
         }
         delay_ms(500);
         timer++;
