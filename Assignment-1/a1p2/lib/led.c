@@ -14,8 +14,7 @@ void led_init(){
 
        // changed to GPIO36
 
-    GPIO->GPFSEL3 &= ~(7u << 18);   // clear the 3-bit field
-    GPIO->GPFSEL3 |=  (1u << 18);   // set to output
+    GPIO->GPFSEL3 |=  (1 << 18);   // set to output
 
 #if defined( RPI3 ) && defined( IOBPLUS )
 	RPI_SetGpioPinFunction( LED_GPIO, FS_OUTPUT );
