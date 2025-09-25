@@ -4,10 +4,10 @@
 MAINFILE = a2p3
 
 
-OBJS	= lib/startup.o lib/syscalls.o 
-OBJS	+= lib/rpi-gpio.o lib/rpi-armtimer.o lib/rpi-interrupts.o lib/rpi-systimer.o 
+OBJS	= lib/startup.o lib/syscalls.o
+OBJS	+= lib/rpi-gpio.o lib/rpi-armtimer.o lib/rpi-interrupts.o lib/rpi-systimer.o
 #a2p1
-OBJS	=  lib/expstruct.o lib/led.o
+OBJS	+=  lib/expstruct.o lib/led.o lib/piface.o
 
 OBJS	+= $(MAINFILE).o
 
@@ -39,7 +39,7 @@ all: $(MAIN)
 $(ELF): $(OBJS)
 	$(CC) -T $(LSCRIPT) $(CFLAGS) $(LFLAGS) $(LDFLAGS) -o $@ $^
 	$(SIZE) $@
-	
+
 $(MAIN): $(ELF)
 	$(OCOPY) $< -O binary $@
 

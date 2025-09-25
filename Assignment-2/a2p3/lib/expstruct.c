@@ -10,14 +10,14 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include "led.h"
 #include "expstruct.h"
 
 ExpStruct *iexp(int x){
-    ExpStruct *e = malloc(sizeof(ExpStruct));
+	ExpStruct *e = malloc(sizeof(ExpStruct));
+    static int total_iterations;
     // pre condition check
     if (x < 0 || x > 20) {
-        printf("Input out of range\n");
         e->expInt = 0;
         e->expFraction = 0;
         return e;
@@ -25,6 +25,11 @@ ExpStruct *iexp(int x){
     if (x == 0) {
         e->expInt = 1;     // e^0 = 1
         e->expFraction = 0;
+        // setting it to one since
+        // it will the 1st one to execute
+        // and will initiate the count
+        // and clear any values from the address
+        total_iterations = 1;
         return e;
     }
 
@@ -37,11 +42,20 @@ ExpStruct *iexp(int x){
     for (int k = 1; k < TERM_LIMIT; ++k) {
         term *= (double)x / (double)k;  // term_k = term_{k-1} * x/k
         sum += term;
+		total_iterations++;
+        if (total_iterations > 10){
+            // toggling every 100 total iteration used
+            // by all calls to iexp
+            led_toggle();
+            // reseting iteration after toggling
+            total_iterations = 0;
+        }
 
         if (term < EPS_FOR_2DP) {
             break;
         }
     }
+	// printf("Total iterations so far: %d\n", total_iterations);
 
     /* Split into integer + two-decimal fractional parts with rounding. */
     long long scaled = (long long)(sum * 100.0 + 0.5);  // rounded to 2 dp
@@ -57,12 +71,10 @@ ExpStruct *iexp(int x){
     e->expFraction = frac_two_decimals;
     // Post-condition: Ensure the structure contains valid values
     if (e->expInt != integer_part) {
-        printf("Post-condition failed: expInt is incorrect\n");
         free(e);
         return NULL;
     }
     if (e->expFraction != frac_two_decimals && e->expFraction >= 0 && e->expFraction < 100) {
-        printf("Post-condition failed: expFraction is incorrect\n");
         free(e);
         return NULL;
     }

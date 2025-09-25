@@ -7,31 +7,31 @@
  * Modified by Wagner Morais on Aug 2023.
 */
 #include <stdio.h>
+#include <stdlib.h>
 #include "expstruct.h"
-#include "led.h"
+#include "piface.h"
+#include "rpi-systimer.h"
 
-// #define LINE 32
+#define LINE 32
 
 int main()
 {
-	
-	// char str[LINE];
-	led_init();
-	RPI_WaitMicroSeconds(2000000);	
-	
+    char str[LINE];
+	piface_init();
+	piface_clear();
+    piface_puts("DT8025 - A2P3");
+    RPI_WaitMicroSeconds(2000000);
+    piface_clear();
     ExpStruct* value;
-  
-    int i = 1; 
-	// cyclic execution
-    while (1) {
-		value = iexp(i++);
-		// sprintf(str,"%d: %d.%d\n", i, value->expInt, value->expFraction);
-		// piface_puts(str);		
-		led_toggle();	// or led_blink();
-		if (i >= 20)
-			i = 1;
-		free(value);
-		// piface_clear();
+
+    // for testing
+    while(1){
+        for (int i = 0; i < 21; i++) {
+            value = iexp(i);
+            sprintf(str,"e^%d = %d.%02d\n", i, value->expInt, value->expFraction);
+            piface_puts(str);
+        }
     }
+    free(value);
 	return 0;
 }

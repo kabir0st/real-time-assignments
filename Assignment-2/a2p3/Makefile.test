@@ -16,7 +16,6 @@ LIB_SRC = lib/expstruct.c
 MAIN_OBJ = main.o
 LIB_OBJ = lib/expstruct.o
 
-
 # Default target
 all: $(TARGET)
 
@@ -25,12 +24,16 @@ $(TARGET): $(MAIN_OBJ) $(LIB_OBJ)
 	$(CC) $(MAIN_OBJ) $(LIB_OBJ) -o $(TARGET) $(LDFLAGS)
 
 # Compile main.c
-$(MAIN_OBJ): $(MAIN_SRC) lib/expstruct.h
+$(MAIN_OBJ): $(MAIN_SRC) lib/expstruct.h lib/led.h
 	$(CC) $(CFLAGS) -c $(MAIN_SRC) -o $(MAIN_OBJ)
 
 # Compile lib/expstruct.c
-$(LIB_OBJ): $(LIB_SRC) lib/expstruct.h
-	$(CC) $(CFLAGS) -c $(LIB_SRC) -o $(LIB_OBJ)
+lib/expstruct.o: lib/expstruct.c lib/expstruct.h
+	$(CC) $(CFLAGS) -c lib/expstruct.c -o lib/expstruct.o
+
+# Compile lib/led.c
+lib/led.o: lib/led.c lib/led.h
+	$(CC) $(CFLAGS) -c lib/led.c -o lib/led.o
 
 # Test target - runs the program
 test: $(TARGET)
@@ -42,7 +45,7 @@ clean:
 	rm -f $(MAIN_OBJ) $(LIB_OBJ) $(TARGET)
 
 # Phony targets
-.PHONY: all test clean
+.PHONY: all test clean help
 
 # Help target
 help:
