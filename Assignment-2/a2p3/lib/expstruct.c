@@ -60,12 +60,10 @@ ExpProgramState *iexp(ExpProgramState *c_state) {
     // Post-condition: Ensure the structure contains valid values
     if (c_state->n_exp_int != integer_part) {
         printf("Post-condition failed: expInt is incorrect\n");
-        free(c_state);
         return NULL;
     }
     if (c_state->n_exp_fraction != frac_two_decimals && c_state->n_exp_fraction >= 0 && c_state->n_exp_fraction < 100) {
         printf("Post-condition failed: expFraction is incorrect\n");
-        free(c_state);
         return NULL;
     }
     return c_state;
