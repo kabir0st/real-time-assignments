@@ -11,7 +11,11 @@
 void led_init(){
 	/* Write 1 to the GPIO16 init nibble in the Function Select 1 GPIO
        peripheral register to enable GPIO16 as an output */
-    GPIO->GPFSEL1 |= (1 << 18);
+
+       // changed to GPIO36
+
+    GPIO->GPFSEL3 &= ~(7u << 18);   // clear the 3-bit field
+    GPIO->GPFSEL3 |=  (1u << 18);   // set to output
 
 #if defined( RPI3 ) && defined( IOBPLUS )
 	RPI_SetGpioPinFunction( LED_GPIO, FS_OUTPUT );
@@ -19,29 +23,29 @@ void led_init(){
 }
 
 void led_on(){
-	/* Set the GPIO16 output high ( Turn OK LED off )*/
-	GPIO->GPSET0 |= (1 << 16);
+	/* Set the GPIO16 output high ( Turn OK LED on )*/
+	GPIO->GPSET1 = (1u << 4);
 #if defined( RPI3 ) && defined( IOBPLUS )
-	/* Set the ACT LED attached to GPIO29 output high ( Turn OK LED off )
+	/* Set the ACT LED attached to output high ( Turn OK LED on )
 	   Declarations in rpi-gpio.h
 	*/
-	GPIO->LED_GPSET |= (1 << LED_GPIO_BIT);
+	GPIO->LED_GPSET |= (1u << LED_GPIO_BIT);
 #endif
 }
 
 void led_off(){
-	/* Set the GPIO16 output high ( Turn OK LED off )*/
-	GPIO->GPCLR0 |= (1 << 16);
+	/* Set the GPIO16 output low ( Turn OK LED off )*/
+	GPIO->GPCLR1 = (1u << 4);
 #if defined( RPI3 ) && defined( IOBPLUS )
-	/* Set the ACT LED attached to GPIO29 output high ( Turn OK LED off )
+	/* Set the ACT LED attached to output low ( Turn OK LED off )
 	   Declarations in rpi-gpio.h
 	*/
-	GPIO->LED_GPCLR |= (1 << LED_GPIO_BIT);
+	GPIO->LED_GPCLR |= (1u << LED_GPIO_BIT);
 #endif
 }
 
 void led_toggle(){
-    if (GPIO->GPLEV0 & (1 << 16)) {
+    if (GPIO->GPLEV1 & (1u << 4)) {
         // LED is currently on, turn it off
         led_off();
     } else {
