@@ -9,7 +9,7 @@
 #include "rpi-gpio.h"
 
 void led_init(){
-	/* Write 1 to the GPIO16 init nibble in the Function Select 1 GPIO
+	/* Write 1 to the GPIO36 init nibble in the Function Select 1 GPIO
        peripheral register to enable GPIO16 as an output */
     GPIO->GPFSEL1 |= (1 << 18);
 
