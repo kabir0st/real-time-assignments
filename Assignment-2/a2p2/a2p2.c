@@ -9,28 +9,60 @@
 
 #include "expstruct.h"
 #include "piface.h"
+#include <stdlib.h>
+#include "rpi-systimer.h"
 
 #define LINE 32
 
 int main()
 {
-
+	
 	char str[LINE];
 	piface_init();
-	piface_clear();
 
-	piface_puts("DT8025 - A2P2");
-	RPI_WaitMicroSeconds(2000000);
-    piface_clear();
+	while(1)
+	{
 
-    ExpStruct* value;
+		piface_clear();
+		
+		piface_puts("DT8025 - A2P2");
+		RPI_WaitMicroSeconds(2000000);	
+		piface_clear();
 
-    value = iexp(10);
+		for (int n = 1; n <= 20; ++n) {
+			ExpStruct* value = iexp(n);
+			if (!value) {
+				piface_puts("iexp() failed");
+				break;
+			}
 
-    sprintf(str,"%d: %d.%d", 10, value->expInt, value->expFraction);
-	piface_puts(str);
-	free(value);
+			// Print "n: int.frac" with two digits in the fraction (e.g., 2.05)
+			// Note the %02d to zero-pad the fractional part.
+			snprintf(str, LINE, "%d: %d.%02d", n, value->expInt, value->expFraction);
 
-	return 0;
+			piface_clear();
+			piface_puts(str);
+
+			free(value);
+
+			// slow down so each value is visible on the LCD
+			RPI_WaitMicroSeconds(800000); 
+		}
+
+		piface_clear();
+		piface_puts("Finito");
+		RPI_WaitMicroSeconds(800000);
+
+	}
+
+    return 0;
+    
+    //value = iexp(10);
+	
+    //sprintf(str,"%d: %d.%d", 10, value->expInt, value->expFraction);
+	//piface_puts(str);
+	//free(value);
+
+	//return 0;
 
 }
