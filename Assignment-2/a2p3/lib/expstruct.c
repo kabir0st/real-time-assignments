@@ -56,7 +56,7 @@ ExpStruct *iexp(int x){
         // separately so we won't have to use the delay, but I am
         // not sure if we are supposed to do that so eh.
 
-        if (total_iterations > 200){
+        if (total_iterations > 500){
             // toggling every 100 total iteration used
             // by all calls to iexp
             led_toggle();
