@@ -27,7 +27,6 @@ int main()
     piface_clear();
     ExpStruct* value;
     led_init();
-    // for testing
     while(1){
         for (int i = 0; i < 21; i++) {
             value = iexp(i);

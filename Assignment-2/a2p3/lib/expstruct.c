@@ -14,8 +14,6 @@
 #include "expstruct.h"
 #include "rpi-systimer.h"
 
-#define DELAY 20000
-
 ExpStruct *iexp(int x){
 	ExpStruct *e = malloc(sizeof(ExpStruct));
     extern int total_iterations;
@@ -46,7 +44,6 @@ ExpStruct *iexp(int x){
         // limits the performance of the function
         // but it's just to show the values on the piface
         // after the calculation of e^x.
-        RPI_WaitMicroSeconds(DELAY);
 
         // we can use a cached array to store the values
         // of e^x for x = 0 to 20 to avoid recalculating
@@ -59,7 +56,7 @@ ExpStruct *iexp(int x){
         // separately so we won't have to use the delay, but I am
         // not sure if we are supposed to do that so eh.
 
-        if (total_iterations > 50){
+        if (total_iterations > 200){
             // toggling every 100 total iteration used
             // by all calls to iexp
             led_toggle();
