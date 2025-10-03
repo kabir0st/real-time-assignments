@@ -97,6 +97,9 @@ int main() {
 	printf("\nStarting threads...\n\n");
 
 	spawn(computePower, 0);
+    spawn(computePrimes, 1);
+    spawn(computePrimes, 3);
+
 	computePrimes(1);
 
 	return 0;
