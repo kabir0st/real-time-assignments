@@ -111,8 +111,6 @@ static thread dequeue(thread *queue) {
 		// Empty queue, handle this condition gracefully!
 		return NULL;
 	}
-    printf("Queue address: %p\n", (void*)queue);
-    printf("P: %p\n", (void*)p);
 	return p;
 }
 

@@ -96,11 +96,15 @@ int main() {
 	usleep(2000000);
 	printf("\nStarting threads...\n\n");
 
-	spawn(computePower, 0);
+	spawn(computePrimes, 0);
     spawn(computePrimes, 1);
-    spawn(computePrimes, 3);
+    spawn(computePrimes, 2);
+	spawn(computePrimes, 3);
+    spawn(computePrimes, 4);
 
-	computePrimes(1);
-
+	// computePrimes(1);
+	while(1) {
+		yield();
+	}
 	return 0;
 }
