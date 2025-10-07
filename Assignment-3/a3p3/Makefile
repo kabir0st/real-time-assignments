@@ -1,13 +1,13 @@
 # Makefile for Raspberry Pi 3
 # Updated by Wagner Morais Aug 22
 
-MAINFILE = a3p3
+MAINFILE = a3p1
 
 OBJS	=  lib/expstruct.o lib/piface.o lib/led.o
-OBJS	+= lib/uart.o lib/rpi-armtimer.o lib/rpi-gpio.o lib/rpi-interrupts.o lib/rpi-systimer.o
-OBJS	+= lib/tinythreads.o
+OBJS	+= lib/uart.o lib/rpi-armtimer.o lib/rpi-gpio.o lib/rpi-interrupts.o lib/rpi-systimer.o 
+OBJS	+= lib/tinythreads.o 
 
-OBJS	+= lib/startup.o lib/syscalls.o
+OBJS	+= lib/startup.o lib/syscalls.o 
 OBJS	+= $(MAINFILE).o
 
 ELF		= $(MAINFILE).elf
@@ -38,7 +38,7 @@ all: $(MAIN)
 $(ELF): $(OBJS)
 	$(CC) -T $(LSCRIPT) $(CFLAGS) $(LFLAGS) $(LDFLAGS) -o $@ $^
 	$(SIZE) $@
-
+	
 $(MAIN): $(ELF)
 	$(OCOPY) $< -O binary $@
 
