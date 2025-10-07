@@ -70,6 +70,13 @@ SECTIONS {
 		PROVIDE_HIDDEN (_ebss = .);
 	}
 
+	/* ARM exception index (for stack unwinding) */
+	.ARM.exidx : {
+		__exidx_start = .;
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+		__exidx_end = .;
+	}
+
 	/* Might be needed for C++ exceptions */
 	/DISCARD/ : { *(.eh_frame) }
 

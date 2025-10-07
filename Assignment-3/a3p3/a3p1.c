@@ -4,7 +4,7 @@
  * Updated by Wagner Morais and Hazem Ali on 20/09/21.
  * Updated by Wagner Morais on Sept 24.
 */
-
+  
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -23,10 +23,10 @@
 /** @brief Checks whether the input parameter is divisible by itself and 1, i.e, if the input parameter is prime.
  *  @param int i Is the input parameter to be checked whether it is prime or not
  *  @return int Returns 1 if the input parameter is prime, else it returns 0.
- *
+ * 
  *  Pre-condition: Input parameter i mus tbe positive
- *
- *  test-cases:
+ * 
+ *  test-cases: 
  *  is_prime(7) must return 1, i.e., true
  *  is_prime(9) must return 0, i.e., false
  *  is_prime(-1) must return 0, i.e., false
@@ -40,11 +40,11 @@ int is_prime(int i) {
     return 1;
 }
 
-/** @brief For all positive integers, displays prime numbers in a given segment
+/** @brief For all positive integers, displays prime numbers in a given segment 
  *  @param int seg Is the segment, i.e., 0: top left, 1:top right, 2: bottom left and 3: bottom right.
  */
 void computePrimes(int seg) {
-    for(int n = 0; ; n++) {
+    for(int n = 0; ; n++) {  
         if (is_prime(n)) {
             PUTTOLDC("T%d: Prime %d\n", seg, n);
 			RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
@@ -64,8 +64,8 @@ void computePower(int seg) {
     }
 }
 
-/** @brief Loops over the positive integers less than 21,
-  * calculates the exponential function and displays the integer part in a given segment.
+/** @brief Loops over the positive integers less than 21, 
+  * calculates the exponential function and displays the integer part in a given segment.  
   * @param int seg Is the segment, i.e., 0: top left, 1:top right, 2: bottom left and 3: bottom right.
  */
 void computeExponential(int seg) {
@@ -85,14 +85,14 @@ void computeExponential(int seg) {
 
 
 int main() {
-
+	
 	piface_init();
 	piface_clear();
-
+	
 	piface_puts("DT8025 - A3P1");
-	RPI_WaitMicroSeconds(2000000);
+	RPI_WaitMicroSeconds(2000000);	
 	piface_clear();
 
 	spawn(computePower, 0);
 	computePrimes(1);
-}	
+}

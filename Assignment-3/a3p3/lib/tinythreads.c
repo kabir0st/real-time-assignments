@@ -40,7 +40,7 @@ __attribute__(( always_inline )) static inline void disable(){
 
 #define DISABLE() disable()
 #define ENABLE()  enable()
-#define SETSTACK(buf,a) *((unsigned int *)(buf)+8) = (unsigned int)(a) + STACKSIZE - 4;
+#define SETSTACK(buf,a) *((unsigned int *)(buf)+8) = (unsigned int)(a) + STACKSIZE - 4;	
 
 /*----------------------------------------------------------------------------
   Thread control structures
@@ -71,7 +71,7 @@ thread current	= &initp;
 int initialized = 0;
 
 
-/** @brief Adds an element to the tail of the queue
+/** @brief Adds an element to the tail of the queue  
  * @note In Assignment 4, parts 2 and 3, you might want to change this
  * implementation to enqueue with insertion sort.
  */
@@ -104,7 +104,7 @@ static thread dequeue(thread *queue) {
 }
 
 /** @brief Initialize a single thread
- */
+ */ 
 static void initializeThread(thread *t, int idx) {
     (*t)->idx = idx;
     (*t)->function = NULL;
@@ -117,7 +117,7 @@ static void initializeThread(thread *t, int idx) {
 
 /** @brief Initializes each thread in the threads array.
  * For each thread in the threads array, a unique identifier is assigned
- * along with the task information.
+ * along with the task information. 
  */
 static void initializeThreads(void) {
 	initp.idx = -1;
@@ -125,8 +125,8 @@ static void initializeThreads(void) {
 	initp.arg = -1;
 	initp.next = NULL;
 	initp.Period_Deadline = INT_MAX;
-	initp.Rel_Period_Deadline = INT_MAX;
-
+	initp.Rel_Period_Deadline = INT_MAX;	
+	
 	for (int i=0; i < NTHREADS; i++)
 	{
 		initializeThread(&threads[i], i);
@@ -162,7 +162,7 @@ static void dispatch(thread next) {
 void spawn(void (* function)(int), int arg) {
 	thread newp;
 	DISABLE();
-	if (!initialized)
+	if (!initialized) 
 		initializeThreads();
 	newp = dequeue(&freeQ);
 	newp->function = function;
@@ -174,29 +174,29 @@ void spawn(void (* function)(int), int arg) {
 		DISABLE();
 		enqueue(current, &freeQ);
 		current = NULL;
-		dispatch(dequeue(&readyQ));
+		dispatch(dequeue(&readyQ));	
 	}
 	SETSTACK(&newp->context, &newp->stack);
 	enqueue(newp, &readyQ);
 	ENABLE();
 }
 
-/** @brief Preempts the execution of the current thread and a new
+/** @brief Preempts the execution of the current thread and a new 
  * thread gets to run.
  */
 void yield(void) {
 	DISABLE();
-	if (readyQ != NULL){
+	if (readyQ != NULL){		
 		thread p = dequeue(&readyQ);
 		enqueue(current, &readyQ);
 		dispatch(p);
-	}
+	}	
 	ENABLE();
 }
 
 /** @brief Sets the locked flag of the mutex if it was previously unlocked,
  * otherwise, the running thread shall be placed in the waiting queue of the
- * mutex and a new thread should be dispatched from the ready queue.
+ * mutex and a new thread should be dispatched from the ready queue. 
  */
 void lock(mutex *m) {
 	// To be implemented in Assignment 4!!!
@@ -209,7 +209,7 @@ void unlock(mutex *m) {
 	// To be implemented in Assignment 4!!!
 }
 
-/** @brief Creates an thread block instance and assign to it an start routine,
+/** @brief Creates an thread block instance and assign to it an start routine, 
  * i.e., the procedure that the thread will execute.
  * @param function is a pointer to the start routine
  * @param int arg is the parameter to the start routine
@@ -219,7 +219,7 @@ void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, u
 }
 
 
-/** @brief Sort the elements a given queue container by a given
+/** @brief Sort the elements a given queue container by a given 
  * field or attribute.
  * https://arxiv.org/abs/2110.01111
  */
@@ -245,13 +245,13 @@ static void scheduler_RR(void){
 	// To be implemented in Assignment 4!!!
 }
 
-/** @brief Schedules periodic tasks using Rate Monotonic (RM)
+/** @brief Schedules periodic tasks using Rate Monotonic (RM) 
  */
 static void scheduler_RM(void){
 	// To be implemented in Assignment 4!!!
 }
 
-/** @brief Schedules periodic tasks using Earliest Deadline First  (EDF)
+/** @brief Schedules periodic tasks using Earliest Deadline First  (EDF) 
  */
 static void scheduler_EDF(void){
 	// To be implemented in Assignment 4!!!
@@ -268,21 +268,21 @@ void scheduler(void){
 
 /** @brief Prints via UART the content of the main variables in TinyThreads
  */
-void printTinyThreadsUART(void) {
+void printTinyThreadsUART(void) {	
 	thread t;
 	t = threads;
 	print2uart("\nThreads\n");
 	for (int i=0; i<NTHREADS; i++)
-		print2uart("t[%i] @%#010x arg: %d idx: %d dl: %d\n", i, &t[i], t[i].arg, t[i].idx, t[i].Period_Deadline);
-
+		print2uart("t[%i] @%#010x arg: %d idx: %d dl: %d\n", i, &t[i], t[i].arg, t[i].idx, t[i].Period_Deadline);		
+	
 	print2uart("Current\n");
-	print2uart("t[%i] @%#010x arg: %d dl: %d\n", current->idx, &current, current->arg, current->Period_Deadline);
+	print2uart("t[%i] @%#010x arg: %d dl: %d\n", current->idx, &current, current->arg, current->Period_Deadline);		
 
 	print2uart("freeQ\n");
 	t=freeQ;
 	while(t)
 	{
-		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}
 
@@ -290,21 +290,21 @@ void printTinyThreadsUART(void) {
 	t=readyQ;
 	while(t)
 	{
-		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}
 	print2uart("doneQ\n");
 	t=doneQ;
 	while(t)
 	{
-		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
-	}
+	}	
 }
 
 /** @brief Prints on the PiFace the content of the main variables in TinyThreads
  */
-void printTinyThreadsPiface(void) {
+void printTinyThreadsPiface(void) {	
 	thread t;
 
 	piface_clear();
@@ -318,15 +318,15 @@ void printTinyThreadsPiface(void) {
 	for (int i=0; i<NTHREADS; i++)
 	{
 		piface_clear();
-		PUTTOLDC("t[%i] @%#010x (%d)", i, &t[i], t[i].arg);
+		PUTTOLDC("t[%i] @%#010x (%d)", i, &t[i], t[i].arg);		
 		RPI_WaitMicroSeconds(2000000);
 	}
-
+	
 	piface_clear();
 	piface_puts("Current");
 	RPI_WaitMicroSeconds(2000000);
 	piface_clear();
-	PUTTOLDC("t[%i] @%#010x (%d)", current->idx, &current, current->arg);
+	PUTTOLDC("t[%i] @%#010x (%d)", current->idx, &current, current->arg);		
 	RPI_WaitMicroSeconds(2000000);
 
 	piface_clear();
@@ -336,11 +336,11 @@ void printTinyThreadsPiface(void) {
 	while(t)
 	{
 		piface_clear();
-		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);
+		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);		
 		RPI_WaitMicroSeconds(2000000);
 		t = t->next;
 	}
-
+	
 	piface_clear();
 	t = readyQ;
 	piface_puts("readyQ");
@@ -348,11 +348,11 @@ void printTinyThreadsPiface(void) {
 	while(t)
 	{
 		piface_clear();
-		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);
+		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);		
 		RPI_WaitMicroSeconds(2000000);
 		t = t->next;
 	}
-
+	
 	piface_clear();
 	t = doneQ;
 	piface_puts("doneQ");
@@ -360,7 +360,7 @@ void printTinyThreadsPiface(void) {
 	while(t)
 	{
 		piface_clear();
-		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);
+		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);		
 		RPI_WaitMicroSeconds(2000000);
 		t = t->next;
 	}
