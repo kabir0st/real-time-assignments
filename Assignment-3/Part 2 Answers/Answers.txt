@@ -1,0 +1,21 @@
+===== PART 2 ANSWERS =====
+
+1. What is the purpose of the `spawn` function? How does it work?
+
+2. What is the purpose of the `dispatch` function? How does it work?
+
+3. What is the purpose of the `yield` function? How does it work?
+
+4. When is the code `current->function(current->arg);` within the `spawn` function
+executed?
+
+5. After finishing the execution of line 3, describe the content of `readyQ`
+
+6. After finishing the execution of line 3, describe the content of `freeQ`
+
+7. Which task, i.e., computePower and computePrimes, executes first, and why?
+
+8. Although functions `computePower` and `computePrimes` never return, they execute
+concurrently in the `a3p1.img` kernel. How is this achieved?
+
+9. Where in `lib/tinythreads.c` would you add a thread that terminated into `doneQ`?
