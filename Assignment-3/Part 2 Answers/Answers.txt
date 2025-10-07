@@ -12,24 +12,26 @@ Save -> Update -> Restore -> Transfer
 
 3. What is the purpose of the `yield` function? How does it work?
 Yield function allows a currently running thread to give up the CPU to another thread. This way we can implement cooperative multitasking where threads yield
-their control instead of forcing preempively. FIFO, interrupt disabling.
+their control instead of forcing preempively. FIFO order, interrupt disabling.
 Give up -> Move to back -> Switch to next
 
 4. When is the code `current->function(current->arg);` within the `spawn` function
 executed?
-
+Runs the first time that a new thread is deployed and its context is restored. After that every dispatch/yield just restores the saved CPU state and continues
+where it left off.
 
 5. After finishing the execution of line 3, describe the content of `readyQ`
-
+readyQ holds the newly created TCBs in FIFO order of creation. Head = first spawn:ed task, then second, etc. The init/main isnt in readyQ unless explicitly called.
 
 6. After finishing the execution of line 3, describe the content of `freeQ`
-
+All unused remaining TCBs. Its the original pool minus the TCBs taken for the threads just spawned.
 
 7. Which task, i.e., computePower and computePrimes, executes first, and why?
-
+computePrime is executed first because its called directly and not spawned. The spawned computePower waits in readyQ until computePrimes call yield.
 
 8. Although functions `computePower` and `computePrimes` never return, they execute
 concurrently in the `a3p1.img` kernel. How is this achieved?
-
+Cooperative multitasking by the yield function which performs switching between the threads.
 
 9. Where in `lib/tinythreads.c` would you add a thread that terminated into `doneQ`?
+Inside the spawn function, by replacing or in addition to return of the thread to the free queue.
