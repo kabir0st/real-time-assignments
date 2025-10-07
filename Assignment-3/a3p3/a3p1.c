@@ -95,4 +95,4 @@ int main() {
 
 	spawn(computePower, 0);
 	computePrimes(1);
-}
+}	
