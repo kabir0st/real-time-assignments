@@ -1,6 +1,9 @@
 ===== PART 2 ANSWERS =====
 
 1. What is the purpose of the `spawn` function? How does it work?
+The spawn function creates a new thread in TinyThread system by allocating a thread control block from the free pool. It initialize with pointer to function and argument to pass.
+Sets up execution context and adds to the readyQ so it can be scheduled for execution.
+Allocate -> Configure -> Create -> Set up -> Queue -> Protect
 
 2. What is the purpose of the `dispatch` function? How does it work?
 
