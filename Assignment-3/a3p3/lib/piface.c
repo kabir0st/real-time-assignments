@@ -254,7 +254,10 @@ void piface_clear(void)
  */
 void piface_set_cursor(uint8_t col, uint8_t row)
 {
-	//to be implemented
+	// LCD DDRAM address command: 0x80 | address
+	// Row 0 starts at 0x00, Row 1 starts at 0x40
+	uint8_t address = (row * 0x40) + col;
+	lcd_write_cmd(0x80 | address);
 }
 
 /** @brief Displays an integer content in a given segment in the PiFace display.
@@ -277,7 +280,23 @@ void piface_set_cursor(uint8_t col, uint8_t row)
  *     void printAtSeg(int seg, const char* fmt, ...);
  */
 void print_at_seg(int seg, int num) {
-	//to be implemented
+	// Determine row and column based on segment
+	// Seg 0: row=0, col=0 | Seg 1: row=0, col=8
+	// Seg 2: row=1, col=0 | Seg 3: row=1, col=8
+	uint8_t row = (seg >= 2) ? 1 : 0;
+	uint8_t col = (seg % 2 == 0) ? 0 : 8;
+	
+	// Set cursor to the segment position
+	piface_set_cursor(col, row);
+	
+	// Format and display the number (max 8 chars per segment)
+	char buffer[9];  // 8 chars + null terminator
+	snprintf(buffer, sizeof(buffer), "%-8d", num);
+	
+	// Write the formatted string
+	for (int i = 0; i < 8 && buffer[i] != '\0'; i++) {
+		lcd_write_data(buffer[i]);
+	}
 }
 
 /** @brief Similar to print_at_seg, but displays arbitrary content on a given segment. For example:

@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include "expstruct.h"
+#include "tinythreads.h"
 
 ExpStruct *iexp(int x){
     ExpStruct *e = malloc(sizeof(ExpStruct));
@@ -37,6 +38,11 @@ ExpStruct *iexp(int x){
     for (int k = 1; k < TERM_LIMIT; ++k) {
         term *= (double)x / (double)k;  // term_k = term_{k-1} * x/k
         sum += term;
+        // we don't need to have seperate counter because we can use the k counter
+        // and the loop has O(1) complexity.
+        if (k % 10 == 0) {
+            yield();
+        }
 
         if (term < EPS_FOR_2DP) {
             break;
