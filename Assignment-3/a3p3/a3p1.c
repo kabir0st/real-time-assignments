@@ -18,7 +18,7 @@
 #include "tinythreads.h"
 #include "piface.h"
 #include "expstruct.h"
-
+#include "uart.h"
 
 /** @brief Checks whether the input parameter is divisible by itself and 1, i.e, if the input parameter is prime.
  *  @param int i Is the input parameter to be checked whether it is prime or not
@@ -44,8 +44,10 @@ int is_prime(int i) {
  *  @param int seg Is the segment, i.e., 0: top left, 1:top right, 2: bottom left and 3: bottom right.
  */
 void computePrimes(int seg) {
+	print2uart("computePrimes started\n");
     for(int n = 0; ; n++) {  
         if (is_prime(n)) {
+			print2uart("computePrimes: %d\n", n);
 			print_at_seg(seg, n);
 			RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
             yield();
@@ -57,7 +59,9 @@ void computePrimes(int seg) {
   * @param int seg Is the segment, i.e., 0: top left, 1:top right, 2: bottom left and 3: bottom right.
  */
 void computePower(int seg) {
+	print2uart("computePower started\n");
 	for(int n = 0; ; n++) {
+		print2uart("computePower: %d\n", n*n);
 		print_at_seg(seg,  n*n);
 		RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
         yield();
@@ -69,47 +73,47 @@ void computePower(int seg) {
   * @param int seg Is the segment, i.e., 0: top left, 1:top right, 2: bottom left and 3: bottom right.
  */
 void computeExponential(int seg) {
+	print2uart("computeExponential started\n");
 	ExpStruct* value;
     while (1) {
-			for(int n = 1; n < 20; ) {
+			for(int n = 1; n < 20; n++ ) {
+				print2uart("calling : %d\n", n);
 				// free(iexp(n++));
-				value = iexp(n++);
-				
+				value = iexp(n);
 				// If `seg` is odd, the function displays the fraction part of iexp; otherwise, it displays the integer part.
 				if (seg % 2 == 0) {
+					print2uart("Section 2 %d\n", value->expInt);
 					print_at_seg(seg, value->expInt);
 				} else {
+					print2uart("Section 1 %d\n", value->expFraction);
 					print_at_seg(seg, value->expFraction);
 				}
 				RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
 				free(value);
+				print2uart("free done\n");
+				yield();
 			}
 	}
 }
 
 
 int main() {
-	
+
+
+	uart_init();
+	uart_clear();
+	print2uart("main started\n");
 	piface_init();
-	piface_clear();
-	
+	piface_clear();	
 	piface_puts("DT8025 - A3P3");
-	RPI_WaitMicroSeconds(2000000);	
+	RPI_WaitMicroSeconds(2000000);
 	piface_clear();
-
-	// T1
-	spawn(computePrimes, 0);
-	// T2
-	spawn(computePower, 1);
-
-	// T3
-	spawn(computeExponential, 2);
-
-	// T4
-	spawn(computeExponential,3);
+	print2uart("piface_clear done\n");
+	print2uart("spawning compute power\n");
 	
-	while(1){
-		yield();
-	}
-
+	spawn(computePower, 0);
+	spawn(computePrimes, 1);
+	spawn(computeExponential, 2);
+	computeExponential(3);
+	print2uart("main done\n");
 }

@@ -105,13 +105,20 @@ static thread dequeue(thread *queue) {
 
 /** @brief Initialize a single thread
  */ 
-static void initializeThread(thread *t, int idx) {
-    (*t)->idx = idx;
-    (*t)->function = NULL;
-    (*t)->arg = -1;
-    (*t)->next = &threads[idx + 1];
-    (*t)->Period_Deadline = INT_MAX;
-    (*t)->Rel_Period_Deadline = INT_MAX;
+static void initializeThread(thread t, int idx) {
+	/* print pointer with %p to avoid warnings and show address */
+	print2uart("initializeThread %d %p \n", idx, (void*)t);
+	t->idx = idx;
+	t->function = NULL;
+	t->arg = -1;
+	/* set next to next thread if within bounds, otherwise NULL */
+	if (idx + 1 < NTHREADS) {
+		t->next = &threads[idx + 1];
+	} else {
+		t->next = NULL;
+	}
+	t->Period_Deadline = INT_MAX;
+	t->Rel_Period_Deadline = INT_MAX;
 }
 
 
@@ -160,14 +167,18 @@ static void dispatch(thread next) {
  * @param int arg is the parameter to the start routine
  */
 void spawn(void (* function)(int), int arg) {
+	print2uart("spawn started\n");
 	thread newp;
 	DISABLE();
+	print2uart("spawn disabled\n");
 	if (!initialized) 
 		initializeThreads();
+	print2uart("initializeThreads done\n");
 	newp = dequeue(&freeQ);
 	newp->function = function;
 	newp->arg = arg;
 	newp->next = NULL;
+	print2uart("dequeue done; starting set jump\n");
 	if (setjmp(newp->context) == 1) {
 		ENABLE();
 		current->function(current->arg);
@@ -176,9 +187,12 @@ void spawn(void (* function)(int), int arg) {
 		current = NULL;
 		dispatch(dequeue(&readyQ));	
 	}
+	print2uart("set jump done; settings stack\n");
 	SETSTACK(&newp->context, &newp->stack);
 	enqueue(newp, &readyQ);
+	print2uart("enqueue done; enabling\n");
 	ENABLE();
+	print2uart("returning from spawn\n");
 }
 
 /** @brief Preempts the execution of the current thread and a new 

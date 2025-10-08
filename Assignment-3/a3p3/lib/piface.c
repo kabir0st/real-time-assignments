@@ -291,16 +291,28 @@ void print_at_seg(int seg, int num) {
 	
 	// Format and display the number (max 8 chars per segment)
 	char buffer[9];  // 8 chars + null terminator
-		
+
 	// if the formatted string is longer than the buffer, 
 	// it causes a buffer overflow so using snprintf is better
 	// just just sprintf. Since it takes the size of the buffer as an argument
 	// and checks if the formatted string is longer than the buffer
 
-	snprintf(buffer, sizeof(buffer), "%-8d", num);
-	
-	// Write the formatted string
-	for (int i = 0; i < 8 && buffer[i] != '\0'; i++) {
+	snprintf(buffer, sizeof(buffer), "%d", num);
+
+	for (int i = 0; i<8; i++) {
+		lcd_write_data(' '); // Clear the segment
+	}
+	// reseting cursor to write
+	piface_set_cursor(col, row);
+
+
+	// // Write the formatted string
+	// we are directly writing to the LCD
+	// because if we use piface_puts, it will
+	// update the cnt variable, which will cause
+	// the line to wrap around and clear the display
+	// if it is longer than 16 characters
+	for (int i = 0; buffer[i] != '\0'; i++) {
 		lcd_write_data(buffer[i]);
 	}
 }
