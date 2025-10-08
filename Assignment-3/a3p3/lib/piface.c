@@ -291,6 +291,12 @@ void print_at_seg(int seg, int num) {
 	
 	// Format and display the number (max 8 chars per segment)
 	char buffer[9];  // 8 chars + null terminator
+		
+	// if the formatted string is longer than the buffer, 
+	// it causes a buffer overflow so using snprintf is better
+	// just just sprintf. Since it takes the size of the buffer as an argument
+	// and checks if the formatted string is longer than the buffer
+
 	snprintf(buffer, sizeof(buffer), "%-8d", num);
 	
 	// Write the formatted string
