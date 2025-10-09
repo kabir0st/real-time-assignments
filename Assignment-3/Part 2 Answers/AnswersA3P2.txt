@@ -1,42 +1,48 @@
-===== PART 2 ANSWERS =====
+===== A3P2 ANSWERS =====
+Fredrik Olsson and Tabir Tamari
 
 1. What is the purpose of the `spawn` function? How does it work?
+
 The spawn function creates a new thread in TinyThread system by allocating a thread control block from the free pool. It initialize with pointer to function and argument to pass.
 Sets up execution context and adds to the readyQ so it can be scheduled for execution.
 
 
 2. What is the purpose of the `dispatch` function? How does it work?
+
 Dispatch performs a switch operation from current thread to another. Saves the CPU state of currently running thread and restores the state of next thread to run, transferring control of the CPU.
 Save -> Update -> Restore -> Transfer
 
 3. What is the purpose of the `yield` function? How does it work?
+
 Yield function allows a currently running thread to give up the CPU to another thread. This way we can implement cooperative multitasking where threads yield
 their control instead of forcing preempively. FIFO order, We disable while switching to prevent race condition and being interrupt by other processes.
 Give up -> Move to back -> Switch to next
 
 4. When is the code `current->function(current->arg);` within the `spawn` function
 executed?
+
 Runs the first time that a new thread is deployed and its context is restored. After that every dispatch/yield just restores the saved CPU state and continues
 where it left off.
 
-
 5. After finishing the execution of line 96 (spawn(computePower, 0)), describe the content of readyQ.
+
 The readyQ will have the address that points toward the 1st thread (with idx=0) with no other threads block linked to it, since it's the first thread function to be initialized.
 
-
 6. After finishing the execution of line 96 (spawn(computePower, 0)), describe the content of freeQ.
-Now the freeQ will have an address that points toward the 2nd thread block (T1) of the linked list Threads with idx=1 which is linked to T2 -> T3 -> T4.
 
+Now the freeQ will have an address that points toward the 2nd thread block (T1) of the linked list Threads with idx=1 which is linked to T2 -> T3 -> T4.
 FreeQ will point towards T1 in this linked list.
 T1->T2->T3->T4
 
-
 7. Which task, i.e., computePower and computePrimes, executes first, and why?
+
 computePrime is executed first because its called directly and not spawned. The spawned computePower waits in readyQ until computePrimes call yield.
 
 8. Although functions `computePower` and `computePrimes` never return, they execute
 concurrently in the `a3p1.img` kernel. How is this achieved?
-Cooperative multitasking by the yield function which performs switching between the threads.
+
+Cooperative multitasking by the yield function in each function which performs switching between the threads.
 
 9. Where in `lib/tinythreads.c` would you add a thread that terminated into `doneQ`?
+
 Inside the spawn function, by replacing or in addition to return of the thread to the free queue.

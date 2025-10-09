@@ -1,6 +1,4 @@
-
-AnswersA3P3
-
+===== A3P2 ANSWERS =====
 Fredrik Olsson and Kabir Tamari
 
 Compile the code and boot the RPi using the newly created kernel, i.e., a3p3.img. Does it work?
