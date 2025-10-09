@@ -115,5 +115,6 @@ int main() {
 	spawn(computePrimes, 1);
 	spawn(computeExponential, 2);
 	computeExponential(3);
+	// if returned
 	print2uart("main done\n");
 }

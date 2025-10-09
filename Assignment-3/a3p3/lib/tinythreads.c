@@ -105,20 +105,20 @@ static thread dequeue(thread *queue) {
 
 /** @brief Initialize a single thread
  */ 
-static void initializeThread(thread t, int idx) {
+static void initializeThread(thread *t, int idx) {
 	/* print pointer with %p to avoid warnings and show address */
 	print2uart("initializeThread %d %p \n", idx, (void*)t);
-	t->idx = idx;
-	t->function = NULL;
-	t->arg = -1;
+	(*t)->arg = idx;
+	(*t)->function = NULL;
+	(*t)->arg = -1;
 	/* set next to next thread if within bounds, otherwise NULL */
 	if (idx + 1 < NTHREADS) {
-		t->next = &threads[idx + 1];
+		(*t)->next = &threads[idx + 1];
 	} else {
-		t->next = NULL;
+		(*t)->next = NULL;
 	}
-	t->Period_Deadline = INT_MAX;
-	t->Rel_Period_Deadline = INT_MAX;
+	(*t)->Period_Deadline = INT_MAX;
+	(*t)->Rel_Period_Deadline = INT_MAX;
 }
 
 
@@ -136,7 +136,15 @@ static void initializeThreads(void) {
 	
 	for (int i=0; i < NTHREADS; i++)
 	{
-		initializeThread(&threads[i], i);
+		// since we are not supposed to change
+		// the signature of initializeThread
+		// we create a temporary thread variable
+		// and pass its address, which satisfies
+		// the double pointer requirement
+		// of the function parameter
+		thread temp = &threads[i];
+		initializeThread(&temp, i); 
+		// initializeThread(&threads[i], i);
 	}
 	threads[NTHREADS - 1].next = NULL;
 	initialized = 1;
