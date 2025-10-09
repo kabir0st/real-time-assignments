@@ -1,0 +1,15 @@
+
+AnswersA3P3
+
+Fredrik Olsson and Kabir Tamari
+
+Compile the code and boot the RPi using the newly created kernel, i.e., a3p3.img. Does it work?
+Create a file called  AnswersA3P3.txt and provide an explanation for why this new kernel is not
+working as expected.
+
+Explanation:
+
+The program will crash and not work as expected because it tries to assign more threads than 5 when there are no more thread in freeQ,
+dequeue it will return NULL and program will crash while trying to assign to a NULL structure.
+
+Its defined with 5 threads by "#define NTHREADS	5".
