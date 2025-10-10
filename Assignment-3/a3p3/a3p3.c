@@ -51,6 +51,7 @@ void computePrimes(int seg) {
 			print_at_seg(seg, n);
 			RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
             yield();
+			// print after yeidd
         }
     }
 }
@@ -65,6 +66,8 @@ void computePower(int seg) {
 		print_at_seg(seg,  n*n);
 		RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
         yield();
+		return 
+		// asdgfsg
     }
 }
 
@@ -115,6 +118,13 @@ int main() {
 	spawn(computePrimes, 1);
 	spawn(computeExponential, 2);
 	computeExponential(3);
-	// if returned
+	// spawn(computePower, 0);
+	// spawn(computePower, 1);
+	// spawn(computePrimes, 2);
+	// spawn(computePrimes, 3);
+	// spawn(computeExponential, 0);
+	// spawn(computeExponential, 1);
+	// computeExponential(2);
+	// after returned
 	print2uart("main done\n");
 }
