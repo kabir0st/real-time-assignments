@@ -254,7 +254,11 @@ void piface_clear(void)
  */
 void piface_set_cursor(uint8_t col, uint8_t row)
 {
-	//to be implemented
+	// LCD DDRAM address command: 0x80 | address
+	// Row 0 starts at 0x00, Row 1 starts at 0x40
+	uint8_t address = (row * 0x40) + col;
+	// DDRAM address starts with 0x80
+	lcd_write_cmd(0x80 | address);
 }
 
 /** @brief Displays an integer content in a given segment in the PiFace display.
@@ -277,7 +281,40 @@ void piface_set_cursor(uint8_t col, uint8_t row)
  *     void printAtSeg(int seg, const char* fmt, ...);
  */
 void print_at_seg(int seg, int num) {
-	//to be implemented
+	// Determine row and column based on segment
+	// Seg 0: row=0, col=0 | Seg 1: row=0, col=8
+	// Seg 2: row=1, col=0 | Seg 3: row=1, col=8
+	uint8_t row = (seg >= 2) ? 1 : 0;
+	uint8_t col = (seg % 2 == 0) ? 0 : 8;
+	
+	// Set cursor to the segment position
+	piface_set_cursor(col, row);
+	
+	// Format and display the number (max 8 chars per segment)
+	char buffer[9];  // 8 chars + null terminator
+
+	// if the formatted string is longer than the buffer, 
+	// it causes a buffer overflow so using snprintf is better
+	// just just sprintf. Since it takes the size of the buffer as an argument
+	// and checks if the formatted string is longer than the buffer
+
+	snprintf(buffer, sizeof(buffer), "%d", num);
+
+	for (int i = 0; i<8; i++) {
+		lcd_write_data(' '); // Clear the segment
+	}
+	// reseting cursor to write
+	piface_set_cursor(col, row);
+
+	// Write the formatted string
+	// we are directly writing to the LCD
+	// because if we use piface_puts, it will
+	// update the cnt variable, which will cause
+	// the line to wrap around and clear the display
+	// if it is longer than 16 characters
+	for (int i = 0; buffer[i] != '\0'; i++) {
+		lcd_write_data(buffer[i]);
+	}
 }
 
 /** @brief Similar to print_at_seg, but displays arbitrary content on a given segment. For example:
@@ -288,5 +325,41 @@ void print_at_seg(int seg, int num) {
  *     void printAtSeg(int seg, const char* fmt, ...);
  */
 void printf_at_seg(int seg, const char* fmt, ...) {
-    // The implementation is optional.	
+	// Determine row and column based on segment
+	// Seg 0: row=0, col=0 | Seg 1: row=0, col=8
+	// Seg 2: row=1, col=0 | Seg 3: row=1, col=8
+	uint8_t row = (seg >= 2) ? 1 : 0;
+	uint8_t col = (seg % 2 == 0) ? 0 : 8;
+	
+	// Set cursor to the segment position
+	piface_set_cursor(col, row);
+	
+	// Format the string with variadic arguments
+	char buffer[9];  // 8 chars + null terminator
+	
+	// Initialize variadic argument list
+	va_list args;
+	va_start(args, fmt);
+	
+	// Format string with variable arguments using vsnprintf
+	// vsnprintf is safer than vsprintf as it prevents buffer overflow
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
+	
+	// Clean up variadic argument list
+	va_end(args);
+	
+	// Clear the segment (write 8 spaces)
+	for (int i = 0; i < 8; i++) {
+		lcd_write_data(' ');
+	}
+	
+	// Reset cursor to write formatted content
+	piface_set_cursor(col, row);
+	
+	// Write the formatted string directly to LCD
+	// We write directly to avoid updating the global cnt variable
+	// which could cause unwanted line wrapping
+	for (int i = 0; buffer[i] != '\0' && i < 8; i++) {
+		lcd_write_data(buffer[i]);
+	}
 }

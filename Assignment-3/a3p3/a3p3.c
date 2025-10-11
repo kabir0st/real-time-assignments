@@ -51,7 +51,8 @@ void computePrimes(int seg) {
 			print_at_seg(seg, n);
 			RPI_WaitMicroSeconds(500000); //delay of 0.5s added for visualization purposes!!!
             yield();
-			// print after yeidd
+			
+			// print after yeidd			
         }
     }
 }
