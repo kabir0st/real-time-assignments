@@ -40,6 +40,15 @@ SECTIONS {
 		KEEP (*(SORT(.fini_array.*)))
 		PROVIDE_HIDDEN (__fini_array_end = .);
 	}
+	/* ARM exception index table */
+	.ARM.exidx : {
+		. = ALIGN(4);
+		__exidx_start = .;
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+		. = ALIGN(4);
+		__exidx_end = .;
+	}
+
 	. = ALIGN(4);
 	_etext = .;
 

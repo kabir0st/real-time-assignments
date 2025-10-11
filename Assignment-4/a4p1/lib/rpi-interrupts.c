@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include "rpi-armtimer.h"
 #include "rpi-interrupts.h"
+#include "tinythreads.h" 
 
 volatile int ticks = -1;
 /**
@@ -98,6 +99,7 @@ void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
            caused us to interrupt */
         RPI_GetArmTimer()->IRQClear = 1;
         ticks++;
+        scheduler();
     }
 }
 
