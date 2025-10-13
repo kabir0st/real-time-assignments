@@ -86,7 +86,6 @@ void initTimerInterrupts()
             RPI_ARMTIMER_CTRL_PRESCALE_256;
     /* Enable interrupts! */
     ENABLE();
-    print2uart("initTimerInterrupts setup\n");
 }
 
 /** @brief Represents a job with an "infinite" execution time.
@@ -96,11 +95,14 @@ void computeSomethingForever(int seg) {
 	for(volatile uint32_t i=0; ; i++)
     {
 		// exp of the 1st 9 positive integers, except 0 
-		value = iexp((i%8)+1);
+		// Cycle through 1-9 to avoid out-of-range and keep output reasonable
+		value = iexp((i % 9) + 1);
 		// print_at_seg(seg % 4, value->expInt);
 		printf_at_seg(seg % 4, "T%i: %d", seg, value->expInt);
-        print2uart("T%i: %d\n", seg, value->expInt);
-        RPI_WaitMicroSeconds(100000);  // 0.1 seconds - faster iterations
+        // print2uart("T%i: %d\n", seg, value->expInt);
+        free(value);  // Free allocated memory to prevent memory leak
+        // RPI_WaitMicroSeconds(100000);  // 0.1 seconds - faster iterations
+        yield();  // Allow context switch to other threads
     }
 } 
 
@@ -116,20 +118,17 @@ void computeSomething(int seg) {
 
 int main() {
   	piface_init();
-    // uart_init();
-    // print2uart("DT8025 - A4P1\n");
-    // uart_clear();
     piface_puts("DT8025 - A4P1");
     RPI_WaitMicroSeconds(2000000);	
-    // piface_clear();
+    piface_clear();
     initTimerInterrupts();
     spawn(computeSomethingForever, 0);
     spawn(computeSomethingForever, 1);
     spawn(computeSomethingForever, 2);
     spawn(computeSomethingForever, 3);
-    
     // Main thread becomes idle loop
     while(1) {
         no_operation();
     }
 }
+

@@ -137,6 +137,10 @@ static void dispatch(thread next) {
 			longjmp(next->context, 1);
 		}       
 	}	
+	print2uart("------------------------ After Dispatch\n");
+	printTinyThreadsUART();
+	print2uart("------------------------\n");
+
 }
 
 
@@ -231,10 +235,7 @@ void respawn_periodic_tasks(void) {
 static void scheduler_RR(void){
 	if(readyQ != NULL){
 		thread p = dequeue(&readyQ);
-		// Only enqueue current thread if it's a valid spawned thread (not initp)
-		if(current != &initp && current->function != NULL){
-			enqueue(current, &readyQ);
-		}
+		enqueue(current, &readyQ);
 		dispatch(p);
 	}
 }
