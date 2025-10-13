@@ -229,12 +229,14 @@ void respawn_periodic_tasks(void) {
 /** @brief Schedules tasks using time slicing
  */
 static void scheduler_RR(void){
-	// To be implemented in Assignment 4!!!
-	DISABLE();
 	if(readyQ != NULL){
-		yield();
+		thread p = dequeue(&readyQ);
+		// Only enqueue current thread if it's a valid spawned thread (not initp)
+		if(current != &initp && current->function != NULL){
+			enqueue(current, &readyQ);
+		}
+		dispatch(p);
 	}
-	ENABLE();
 }
 
 /** @brief Schedules periodic tasks using Rate Monotonic (RM) 
@@ -256,6 +258,8 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
+	scheduler_RR();
+	// Note: if context switch happens, we may not return here
 }
 
 /** @brief Prints via UART the content of the main variables in TinyThreads
@@ -267,10 +271,10 @@ void printTinyThreadsUART(void) {
 	for (int i=0; i<NTHREADS; i++)
 		print2uart("t[%i] @%#010x arg: %d idx: %d dl: %d\n", i, &t[i], t[i].arg, t[i].idx, t[i].Period_Deadline);		
 	
-	print2uart("Current\n");
+	print2uart("Current\n\n");
 	print2uart("t[%i] @%#010x arg: %d dl: %d\n", current->idx, &current, current->arg, current->Period_Deadline);		
 
-	print2uart("freeQ\n");
+	print2uart("freeQ\n\n");
 	t=freeQ;
 	while(t)
 	{
@@ -278,14 +282,14 @@ void printTinyThreadsUART(void) {
 		t = t->next;
 	}
 
-	print2uart("readyQ\n");
+	print2uart("readyQ\n\n");
 	t=readyQ;
 	while(t)
 	{
 		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}
-	print2uart("doneQ\n");
+	print2uart("doneQ\n\n");
 	t=doneQ;
 	while(t)
 	{

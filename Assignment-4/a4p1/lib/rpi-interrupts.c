@@ -14,7 +14,8 @@
 #include <stdint.h>
 #include "rpi-armtimer.h"
 #include "rpi-interrupts.h"
-#include "tinythreads.h" 
+#include "tinythreads.h"
+#include "uart.h"
 
 volatile int ticks = -1;
 /**
