@@ -380,98 +380,15 @@ Peripherals:
    - Returns
 7. **Resumption**: CPU restores state and continues where it left off
 
-## Building and Running
-
-### Prerequisites
-- ARM cross-compiler: `arm-none-eabi-gcc`
-- Raspberry Pi 3 hardware
-- PiFace display (optional, for output)
-
-### Build
-```bash
-make
-```
-
-This produces:
-- `a4p1.elf` - ELF executable with debug symbols
-- `a4p1.img` - Raw binary image for Raspberry Pi
-
-### Deploy
-1. Copy `a4p1.img` to SD card
-2. Rename to `kernel7.img` (for RPi 3)
-3. Boot Raspberry Pi
-
-## Key Concepts
-
-### Bare-Metal Programming
-- No operating system
-- Direct hardware access
-- Complete control over CPU and peripherals
-
-### ARM Exception Levels
-- **Supervisor (SVC) Mode**: Main application mode
-- **IRQ Mode**: Used during interrupt handling
-- **FIQ Mode**: Fast interrupt handling (not used here)
-
-### Interrupt Handling
-- **Asynchronous**: Interrupts can occur at any time
-- **Atomic Operations**: Critical sections use `DISABLE()`/`ENABLE()`
-- **Short ISRs**: Interrupt handlers should be fast and minimal
-
-### TinyThreads
-- Cooperative threading (no preemption without interrupts)
-- Uses `setjmp`/`longjmp` for context switching
-- Threads yielding control to each other
-
-## Timing Calculations
-
-```
-ARM Timer Clock = APB Clock / (PreDivider + 1) / Prescaler
-
-With:
-- APB Clock ≈ 250 MHz (Raspberry Pi 3)
-- PreDivider = 0x7D (125 decimal, default)
-- Prescaler = 256 (from CTRL_PRESCALE_256)
-
-Timer Clock = 250 MHz / 126 / 256 ≈ 7.7 kHz
-
-Load Value = 0xF3C (3900 decimal)
-Interrupt Period = 3900 / 7.7 kHz ≈ 0.5 seconds
-
-(Note: Actual timing may vary based on clock configuration)
-```
-
-## Debug & Development
-
-### Viewing Tick Counter
-The global `ticks` variable can be accessed from any thread to get elapsed timer interrupts.
-
-### UART Output
-Use `print2uart()` from `uart.h` to send debug messages over serial.
-
-### PiFace Display
-Use functions from `piface.h` to display information:
-- `piface_puts()` - Display string
-- `print_at_seg()` - Display value at segment
-- `printf_at_seg()` - Printf-style display
-
 ## References
 
 - [BCM2835 ARM Peripherals](https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf)
 - [ARM Architecture Reference Manual](https://developer.arm.com/documentation/)
 - [Valvers Raspberry Pi Bare Metal Tutorial](https://www.valvers.com/rpi/bare-metal/)
 
-## License
-
-This software is licensed under the MIT License. See LICENSE file for details.
-
-Portions developed by:
-- Brian Sidebotham (Valvers)
-- Johan Nordlander and Fredrik Bengtsson (LTU)
-- Wagner de Morais and Hazem Ali
-
 ---
 
 **Assignment Context**: DT8025 Real-Time Systems, Assignment 4 Part 1
+
 
 
