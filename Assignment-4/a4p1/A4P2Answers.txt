@@ -1,6 +1,0 @@
-===== A4P2 ANSWERS =====
-
-a. What is the purpose of the macros DISABLE() and ENABLE()?
-b. What potential issues could arise if a yield() call were injected at the least suitable
-location within functions like dispatch() or enqueue()? How about injecting such
-a call into yield() itself?
