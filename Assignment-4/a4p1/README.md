@@ -1,32 +1,3 @@
-# Assignment 4 Part 1 - Timer Interrupts with TinyThreads
-
-This project demonstrates timer interrupts on a Raspberry Pi 3 running bare-metal code with a lightweight threading system (TinyThreads).
-
-## Project Overview
-
-This is a bare-metal embedded system that:
-- Runs directly on Raspberry Pi 3 hardware without an operating system
-- Implements a cooperative threading system (TinyThreads)
-- Uses ARM Timer interrupts to track system ticks
-- Displays computation results on a PiFace display
-
-## Project Structure
-
-```
-a4p1/
-├── a4p1.c                          # Main application code
-├── Makefile                        # Build configuration
-├── lib/
-│   ├── tinythreads.c/h            # Lightweight threading library
-│   ├── rpi-armtimer.c/h           # ARM Timer hardware interface
-│   ├── rpi-interrupts.c/h         # Interrupt handlers
-│   ├── startup.c                   # Boot and initialization code
-│   ├── piface.c/h                 # PiFace display driver
-│   ├── uart.c/h                   # UART communication
-│   ├── rpi-gpio.c/h               # GPIO control
-│   ├── rpi-systimer.c/h           # System timer utilities
-│   └── expstruct.c/h              # Exponential calculation structures
-```
 
 ## Timer Interrupt Flow
 
@@ -502,4 +473,5 @@ Portions developed by:
 ---
 
 **Assignment Context**: DT8025 Real-Time Systems, Assignment 4 Part 1
+
 
