@@ -77,7 +77,7 @@ void initTimerInterrupts()
        0x400 is about 0.25 seconds - better for context switching
 	   0xF3C - 3900 - 9953 
     */
-    RPI_GetArmTimer()->Load = 0x400;
+    RPI_GetArmTimer()->Load = 0x400; // changed value for testing
     /* Setup the ARM Timer */
     RPI_GetArmTimer()->Control =
             RPI_ARMTIMER_CTRL_23BIT |
@@ -91,18 +91,20 @@ void initTimerInterrupts()
 /** @brief Represents a job with an "infinite" execution time.
  */
 void computeSomethingForever(int seg) {
-    ExpStruct* value;
+    // ExpStruct* value;
 	for(volatile uint32_t i=0; ; i++)
     {
 		// exp of the 1st 9 positive integers, except 0 
 		// Cycle through 1-9 to avoid out-of-range and keep output reasonable
-		value = iexp((i % 9) + 1);
-		// print_at_seg(seg % 4, value->expInt);
-		printf_at_seg(seg % 4, "T%i: %d", seg, value->expInt);
-        // print2uart("T%i: %d\n", seg, value->expInt);
-        free(value);  // Free allocated memory to prevent memory leak
-        // RPI_WaitMicroSeconds(100000);  // 0.1 seconds - faster iterations
-        yield();  // Allow context switch to other threads
+		// value = iexp((i % 9) + 1);
+		
+		// Critical section: protect shared I/O resources
+		lock(&mute);
+		printf_at_seg(seg % 4, "T%i: %d", seg, seg);
+		print2uart("T%i: %d\n", seg, seg);
+    		unlock(&mute);
+		// free(value);  // Free allocated memory to prevent memory leak
+		// RPI_WaitMicroSeconds(100000);  // 0.1 seconds - faster iterations
     }
 } 
 
@@ -117,18 +119,24 @@ void computeSomething(int seg) {
 
 
 int main() {
-  	piface_init();
-    piface_puts("DT8025 - A4P1");
-    RPI_WaitMicroSeconds(2000000);	
-    piface_clear();
-    initTimerInterrupts();
-    spawn(computeSomethingForever, 0);
-    spawn(computeSomethingForever, 1);
-    spawn(computeSomethingForever, 2);
-    spawn(computeSomethingForever, 3);
-    // Main thread becomes idle loop
-    while(1) {
-        no_operation();
-    }
+  uart_init();
+  piface_init();
+  piface_puts("DT8025 - A4P1");
+  print2uart("DT8025 - A4P1\n");
+  RPI_WaitMicroSeconds(2000000);	
+  piface_clear();
+  uart_clear();
+  
+  print2uart("initTimerInterrupts starts\n");
+  initTimerInterrupts();
+  // Spawn threads BEFORE enabling interrupts
+  spawn(computeSomethingForever, 0);
+  spawn(computeSomethingForever, 1);
+  spawn(computeSomethingForever, 2);
+  computeSomethingForever(3);
+  // ideal loop on main for testing
+  // while(1){
+  //   no_operation();
+  // }
 }
 

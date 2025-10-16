@@ -100,15 +100,15 @@ void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
            caused us to interrupt */
         RPI_GetArmTimer()->IRQClear = 1;
         ticks++;
-        print2uart("ticks: %d\n", ticks);
+        print2uart("\n\n\n -------------- New ticks: %d\n", ticks);
         scheduler(); 
+        print2uart("Scheduler Returned\n");
     }
 }
 
 
 /**
     @brief The FIQ Interrupt Handler
-
     The FIQ handler can only be allocated to one interrupt source. The FIQ has
     a full CPU shadow register set. Upon entry to this function the CPU
     switches to the shadow register set so that there is no need to save

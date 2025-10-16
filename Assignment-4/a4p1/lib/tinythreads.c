@@ -133,14 +133,13 @@ static thread dequeue(thread *queue) {
 static void dispatch(thread next) {
 	if (next != NULL) {
 		if (setjmp(current->context) == 0) {
+			print2uart("Jumping from thread %d to thread %d\n", current->idx, next->idx);
 			current = next;
 			longjmp(next->context, 1);
-		}       
-	}	
+		}
+	}
 	print2uart("------------------------ After Dispatch\n");
 	printTinyThreadsUART();
-	print2uart("------------------------\n");
-
 }
 
 
@@ -159,13 +158,19 @@ void spawn(void (* function)(int), int arg) {
 	newp->arg = arg;
 	newp->next = NULL;
 	if (setjmp(newp->context) == 1) {
+		// enabling interrupts before calling the function
+		// causes the function to be called in the context of the new thread
+		// and it's getting called inside the ISR stack.
 		ENABLE();
+		print2uart("Function Called\n");
 		current->function(current->arg);
+		print2uart("function call returned\n");
 		DISABLE();
 		enqueue(current, &freeQ);
 		current = NULL;
 		dispatch(dequeue(&readyQ));	
 	}
+	print2uart("Thread Stack setup %d\n", &newp->idx);
 	SETSTACK(&newp->context, &newp->stack);
 	enqueue(newp, &readyQ);
 	ENABLE();
@@ -175,13 +180,16 @@ void spawn(void (* function)(int), int arg) {
  * thread gets to run.
  */
 void yield(void) {
-	DISABLE();
-	if (readyQ != NULL){		
+	// since yield is called inside the ISR stack,
+	//  we don't need to disable interrupts, it's already disabled.
+	// DISABLE();
+	if (readyQ != NULL){
 		thread p = dequeue(&readyQ);
 		enqueue(current, &readyQ);
 		dispatch(p);
-	}	
-	ENABLE();
+	}
+	print2uart("Yielded to thread %d\n", current->idx);
+	// ENABLE();
 }
 
 /** @brief Sets the locked flag of the mutex if it was previously unlocked,
@@ -189,14 +197,42 @@ void yield(void) {
  * mutex and a new thread should be dispatched from the ready queue. 
  */
 void lock(mutex *m) {
-	// To be implemented in Assignment 4!!!
+	DISABLE();
+	print2uart(" + Mutex Locked\n");
+	// if the mutex is already locked, that means another thread is using it, 
+	// so we need to wait for it to be free so we go in the waitQ. 
+	while (m->locked) {	
+		// we push the current thread to the waitQ.	
+		enqueue(current, &m->waitQ);
+		// then we run another thread from the readyQ.
+		// since current thread cannot use the locked resource.
+		dispatch(dequeue(&readyQ));
+	}
+	// if m->locked is false or 0 we can lock it.
+	// after we the thread wakes back from readyQ,
+	// it's gonna get back from dispatch and continue running.
+	m->locked = 1;
+	ENABLE();
 }
 
 /** @brief Activate a thread in the waiting queue of the mutex if it is
  * non-empty, otherwise, the locked flag shall be reset.
  */
 void unlock(mutex *m) {
-	// To be implemented in Assignment 4!!!
+	DISABLE();
+	// we unlock the mutex by setting the locked flag to 0.
+	m->locked = 0;
+	// if there are threads waiting for the resouce to be unlocked
+	// we add them to the readyQ to run.
+	if (m->waitQ != NULL) {
+		thread next = dequeue(&m->waitQ);
+		// adding it to the back of the readyQ stack so it doesnot 
+		// interface with the scheduling for other tasks.
+		enqueue(next, &readyQ);
+		print2uart("Thread %d added to the ready queue\n", next->idx);
+	}
+	print2uart(" - Mutex Unlocked\n");
+	ENABLE();
 }
 
 /** @brief Creates an thread block instance and assign to it an start routine, 
@@ -233,11 +269,8 @@ void respawn_periodic_tasks(void) {
 /** @brief Schedules tasks using time slicing
  */
 static void scheduler_RR(void){
-	if(readyQ != NULL){
-		thread p = dequeue(&readyQ);
-		enqueue(current, &readyQ);
-		dispatch(p);
-	}
+	yield();
+	print2uart("Scheduler RR After Yield %d\n", current->idx);
 }
 
 /** @brief Schedules periodic tasks using Rate Monotonic (RM) 
@@ -259,8 +292,10 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
+	print2uart("Scheduler RR Called with thread %d\n", current->idx);
 	scheduler_RR();
 	// Note: if context switch happens, we may not return here
+	print2uart("Scheduler RR Returned with thread %d\n", current->idx);
 }
 
 /** @brief Prints via UART the content of the main variables in TinyThreads
@@ -268,33 +303,30 @@ void scheduler(void){
 void printTinyThreadsUART(void) {	
 	thread t;
 	t = threads;
-	print2uart("\nThreads\n");
-	for (int i=0; i<NTHREADS; i++)
-		print2uart("t[%i] @%#010x arg: %d idx: %d dl: %d\n", i, &t[i], t[i].arg, t[i].idx, t[i].Period_Deadline);		
 	
-	print2uart("Current\n\n");
-	print2uart("t[%i] @%#010x arg: %d dl: %d\n", current->idx, &current, current->arg, current->Period_Deadline);		
+	print2uart("\n\nCurrent\n");
+	print2uart("t[%i]\n", current->idx);		
 
-	print2uart("freeQ\n\n");
+	print2uart("\n\nfreeQ\n");
 	t=freeQ;
 	while(t)
 	{
-		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
+		print2uart("t[%i]\n", t->idx);		
 		t = t->next;
 	}
 
-	print2uart("readyQ\n\n");
+	print2uart("\n\nreadyQ\n");
 	t=readyQ;
 	while(t)
 	{
-		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
+		print2uart("t[%i]\n", t->idx);		
 		t = t->next;
 	}
-	print2uart("doneQ\n\n");
+	print2uart("\n\ndoneQ\n");
 	t=doneQ;
 	while(t)
 	{
-		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
+		print2uart("t[%i]\n", t->idx);		
 		t = t->next;
 	}	
 }
