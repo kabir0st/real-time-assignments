@@ -198,7 +198,7 @@ void yield(void) {
  */
 void lock(mutex *m) {
 	DISABLE();
-	print2uart(" + Mutex Locked\n");
+	//print2uart(" + Mutex Locked\n");
 	// if the mutex is already locked, that means another thread is using it, 
 	// so we need to wait for it to be free so we go in the waitQ. 
 	while (m->locked) {	
@@ -231,7 +231,7 @@ void unlock(mutex *m) {
 		enqueue(next, &readyQ);
 		print2uart("Thread %d added to the ready queue\n", next->idx);
 	}
-	print2uart(" - Mutex Unlocked\n");
+	//print2uart(" - Mutex Unlocked\n");
 	ENABLE();
 }
 
