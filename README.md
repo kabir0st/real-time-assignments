@@ -42,6 +42,7 @@ This is the primary README for the project. Use the links below to navigate all 
 - **Assignment 4**
   - [Tasks](Assignment-4/tasks.md)
   - Docs
+    - [**Scheduler, Respawn, and Sort Logic**](Assignment-4/docs/scheduler.md) ⭐ **Comprehensive flow documentation**
     - [Context Switch Fix — README](Assignment-4/docs/README_CONTEXT_SWITCH_FIX.md)
     - [Context Switch IRQ](Assignment-4/docs/context_switch_irq.md)
     - [Visual Guide](Assignment-4/docs/context_switch_visual_guide.md)
