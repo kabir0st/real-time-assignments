@@ -192,48 +192,46 @@ void yield(void) {
 	// ENABLE();
 }
 
-/** @brief Sets the locked flag of the mutex if it was previously unlocked,
- * otherwise, the running thread shall be placed in the waiting queue of the
- * mutex and a new thread should be dispatched from the ready queue. 
- */
 void lock(mutex *m) {
-	DISABLE();
-	//print2uart(" + Mutex Locked\n");
-	// if the mutex is already locked, that means another thread is using it, 
-	// so we need to wait for it to be free so we go in the waitQ. 
-	while (m->locked) {	
-		// we push the current thread to the waitQ.	
-		enqueue(current, &m->waitQ);
-		// then we run another thread from the readyQ.
-		// since current thread cannot use the locked resource.
-		dispatch(dequeue(&readyQ));
-	}
-	// if m->locked is false or 0 we can lock it.
-	// after we the thread wakes back from readyQ,
-	// it's gonna get back from dispatch and continue running.
-	m->locked = 1;
-	ENABLE();
+  // To be implemented in Assignment 4!!!
+  DISABLE();
+  if(m->locked){
+    print2uart("Mutex locked. Thread %d has to wait.\n", current->idx);
+    if (&readyQ != NULL){
+      thread p = dequeue(&readyQ);
+      enqueue(current, &(m->waitQ));
+      dispatch(p);
+    }
+  }
+  else{
+    print2uart("Thread %d locked Mutex\n", current->idx);
+    m->locked = 1;
+  }
+  ENABLE();
 }
+
+
 
 /** @brief Activate a thread in the waiting queue of the mutex if it is
  * non-empty, otherwise, the locked flag shall be reset.
  */
+
 void unlock(mutex *m) {
-	DISABLE();
-	// we unlock the mutex by setting the locked flag to 0.
-	m->locked = 0;
-	// if there are threads waiting for the resouce to be unlocked
-	// we add them to the readyQ to run.
-	if (m->waitQ != NULL) {
-		thread next = dequeue(&m->waitQ);
-		// adding it to the back of the readyQ stack so it doesnot 
-		// interface with the scheduling for other tasks.
-		enqueue(next, &readyQ);
-		print2uart("Thread %d added to the ready queue\n", next->idx);
-	}
-	//print2uart(" - Mutex Unlocked\n");
-	ENABLE();
+  // To be implemented in Assignment 4!!!
+  DISABLE();
+  if (m->waitQ != NULL) {
+    thread p = dequeue(&(m->waitQ));
+    enqueue(current, &readyQ);
+    print2uart("Thread %d has done waiting\n", p->idx);
+    dispatch(p);
+  }
+  else{
+    print2uart("Thread %d unlocked Mutex\n", current->idx);
+    m->locked = 0;
+  }
+  ENABLE();
 }
+
 
 /** @brief Creates an thread block instance and assign to it an start routine, 
  * i.e., the procedure that the thread will execute.
@@ -269,8 +267,15 @@ void respawn_periodic_tasks(void) {
 /** @brief Schedules tasks using time slicing
  */
 static void scheduler_RR(void){
-	yield();
-	print2uart("Scheduler RR After Yield %d\n", current->idx);
+  // To be implemented in Assignment 4!!!
+  print2uart("Current thread %d\n", current->idx);
+  if (readyQ != NULL){
+    thread p = dequeue(&readyQ);
+    enqueue(current, &readyQ);
+    dispatch(p);
+  }
+  print2uart("Yielded to thread %d\n", current->idx);
+  print2uart("Scheduler RR After Yielding %d\n", current->idx);
 }
 
 /** @brief Schedules periodic tasks using Rate Monotonic (RM) 
