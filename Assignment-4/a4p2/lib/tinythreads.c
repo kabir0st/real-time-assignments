@@ -234,6 +234,57 @@ void unlock(mutex *m) {
  */
 void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, unsigned int rel_deadline) {
 	// To be implemented in Assignment 4!!!
+    thread newp;
+    
+    DISABLE();
+    if (!initialized) 
+        initializeThreads();
+    
+    newp = dequeue(&freeQ);
+    if (newp == NULL) {
+        print2uart("ERROR: No free thread blocks\n");
+        ENABLE();
+        return;
+    }
+
+    newp->function = function;
+    newp->arg = arg;
+    newp->Period_Deadline = deadline;
+    newp->Rel_Period_Deadline = rel_deadline;
+    newp->next = NULL;
+
+    if (setjmp(newp->context) == 1) {
+        ENABLE();
+        current->function(current->arg);
+        DISABLE();
+        enqueue(current, &freeQ);
+        dispatch(dequeue(&readyQ));
+    }
+
+    SETSTACK(&newp->context, &newp->stack);
+
+    // Modify enqueue to sort by deadline
+    thread p = readyQ;
+    thread prev = NULL;
+
+    // Insert into ready queue based on deadline
+    while (p != NULL && p->Period_Deadline <= deadline) {
+        prev = p;
+        p = p->next;
+    }
+
+    if (prev == NULL) {
+        // Insert at head
+        newp->next = readyQ;
+        readyQ = newp;
+    } else {
+        // Insert after prev
+        newp->next = prev->next;
+        prev->next = newp;
+    }
+
+    ENABLE();
+
 }
 
 
