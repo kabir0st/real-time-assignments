@@ -95,8 +95,7 @@ void computeSomethingForever(int seg) {
     {
 		// exp of the 1st 9 positive integers, except 0 
 		value = iexp((i%8)+1);
-		print_at_seg(seg % 4, value->expInt);
-		// printf_at_seg(seg % 4, "S%i: %04i", seg, value->expInt);
+		printf_at_seg(seg % 4, "S%i: %04i", seg, value->expInt);
     }
 } 
 
@@ -120,9 +119,11 @@ int main() {
 	piface_puts("DT8025 - A4P2");
 	RPI_WaitMicroSeconds(2000000);	
 	piface_clear();
+
 	spawnWithDeadline(computeSomething, 0, 5, 5);
 	spawnWithDeadline(computeSomething, 1, 3, 3);
   spawnWithDeadline(computeSomething, 2, 7, 7);
+  
   initTimerInterrupts();
 		
     while (1)
