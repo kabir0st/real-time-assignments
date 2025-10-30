@@ -76,16 +76,48 @@ int initialized = 0;
  * implementation to enqueue with insertion sort.
  */
 static void enqueue(thread p, thread *queue) {
-	p->next = NULL;
-	if (*queue == NULL) {
-		*queue = p;
-	} else {
-		thread q = *queue;
-		while (q->next) {
-			q = q->next;
-		}
-		q->next = p;
-	}
+    p->next = NULL;
+    if (*queue == NULL) {
+        *queue = p;
+        return;
+    }
+
+    // If this is the ready queue: insert sorted by Rel_Period_Deadline (smaller first)
+    if (queue == &readyQ) {
+        if (p->Rel_Period_Deadline < (*queue)->Rel_Period_Deadline) {
+            p->next = *queue;
+            *queue = p;
+            return;
+        }
+        thread q = *queue;
+        while (q->next && q->next->Rel_Period_Deadline <= p->Rel_Period_Deadline) {
+            q = q->next;
+        }
+        p->next = q->next;
+        q->next = p;
+        return;
+    }
+
+    // If this is the done queue: insert sorted by Period_Deadline (earliest activation first)
+    if (queue == &doneQ) {
+        if (p->Period_Deadline < (*queue)->Period_Deadline) {
+            p->next = *queue;
+            *queue = p;
+            return;
+        }
+        thread q = *queue;
+        while (q->next && q->next->Period_Deadline <= p->Period_Deadline) {
+            q = q->next;
+        }
+        p->next = q->next;
+        q->next = p;
+        return;
+    }
+
+    // Default: append to tail (used for freeQ, etc.)
+    thread q = *queue;
+    while (q->next) q = q->next;
+    q->next = p;
 }
 
 /** @brief Remove an element from the head of the queue
