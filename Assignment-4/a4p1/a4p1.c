@@ -95,7 +95,7 @@ void computeSomethingForever(int seg) {
     {
 		value = iexp((i%9)+1);
     lock(&mute);
-    print_at_seg(seg % 4, value->expInt);
+    printf_at_seg(seg, "T%d:%d", seg, value->expInt);
     unlock(&mute);
     free(value);
     }
