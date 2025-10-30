@@ -224,7 +224,7 @@ void unlock(mutex *m) {
 		// If no threads are waiting, mark the mutex as unlocked
         m->locked = 0;
     }
-    ENABLE();
+    ENABLE();  // Re-enable interrupts
 }
 
 /** @brief Creates an thread block instance and assign to it an start routine, 
