@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <string.h>
+#include "rpi-systimer.h"
 
 #include "tinythreads.h"
 #include "rpi-interrupts.h"
@@ -25,7 +26,7 @@
 #define NTHREADS	5
 #define NULL 		0
 
-extern volatile unsigned int ticks; 
+
 
 /*----------------------------------------------------------------------------
   Internal References and Macros
