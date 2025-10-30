@@ -12,7 +12,7 @@
  * Part of the code has been also developed, modified and extended to ARMv8 by Wagner de Morais and Hazem Ali.
 */
 /*
- * Modified by Wagner Morais on Oct 2024.
+ * Modified by Wagner Morais on Sep 2022.
 */
 
 
@@ -90,14 +90,13 @@ void initTimerInterrupts()
 /** @brief Represents a job with an "infinite" execution time.
  */
 void computeSomethingForever(int seg) {
-  ExpStruct* value;
+    ExpStruct* value;
 	for(volatile uint32_t i=0; ; i++)
     {
-		value = iexp((i%9)+1);
-    lock(&mute);
-    print_at_seg(seg % 4, value->expInt);
-    unlock(&mute);
-    free(value);
+		// exp of the 1st 9 positive integers, except 0 
+		value = iexp((i%8)+1);
+		print_at_seg(seg % 4, value->expInt);
+		// printf_at_seg(seg % 4, "S%i: %04i", seg, value->expInt);
     }
 } 
 
@@ -105,17 +104,29 @@ void computeSomethingForever(int seg) {
 /** @brief Represents a job with a fixed-length execution time.
  */
 void computeSomething(int seg) {
+	volatile int t = ticks;
+	ExpStruct* value = iexp(10);
+  lock(&mute);
+	printf_at_seg(seg % 4, "S%d: %d", seg, t);
+	unlock(&mute);
+  free(value);
+  while (t == ticks){
+    no_operation();
+  }
 } 
-
 
 int main() {
 	piface_init();
-	piface_puts("DT8025 - A4P1");
+	piface_puts("DT8025 - A4P2");
 	RPI_WaitMicroSeconds(2000000);	
 	piface_clear();
-  initTimerInterrupts();
-  spawn(computeSomethingForever, 0);
-  spawn(computeSomethingForever, 1);
-  spawn(computeSomethingForever, 2);
-  computeSomethingForever(3);	
+    
+	spawnWithDeadline(computeSomething, 0, 5, 5);
+	spawnWithDeadline(computeSomething, 1, 3, 3);
+  spawnWithDeadline(computeSomething, 2, 7, 7);
+
+	initTimerInterrupts();
+		
+    while (1)
+        no_operation();
 }
