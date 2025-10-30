@@ -28,7 +28,7 @@
 #include "rpi3.h"
 #include "piface.h"
 #include "expstruct.h"
-#include "uart.h"
+
 #include "rpi-armtimer.h"
 #include "rpi-systimer.h"
 #include "rpi-interrupts.h"
@@ -73,11 +73,10 @@ void initTimerInterrupts()
     RPI_EnableARMTimerInterrupt();  
     /* Setup the system timer interrupt
        Timer frequency = Clk/256 * 0x400
-       0xF3C is about 1 second
-       0x400 is about 0.25 seconds - better for context switching
+       0xF3C is about 1 second       
 	   0xF3C - 3900 - 9953 
     */
-    RPI_GetArmTimer()->Load = 0x400; // changed value for testing
+    RPI_GetArmTimer()->Load = 0xF3C;
     /* Setup the ARM Timer */
     RPI_GetArmTimer()->Control =
             RPI_ARMTIMER_CTRL_23BIT |
@@ -91,20 +90,18 @@ void initTimerInterrupts()
 /** @brief Represents a job with an "infinite" execution time.
  */
 void computeSomethingForever(int seg) {
-    // ExpStruct* value;
+  ExpStruct* value;
 	for(volatile uint32_t i=0; ; i++)
     {
 		// exp of the 1st 9 positive integers, except 0 
-		// Cycle through 1-9 to avoid out-of-range and keep output reasonable
-		// value = iexp((i % 9) + 1);
-		
-		// Critical section: protect shared I/O resources
-		lock(&mute);
-		printf_at_seg(seg % 4, "T%i: %d", seg, seg);
-		print2uart("T%i: %d\n", seg, seg);
-    		unlock(&mute);
-		// free(value);  // Free allocated memory to prevent memory leak
-		// RPI_WaitMicroSeconds(100000);  // 0.1 seconds - faster iterations
+		value = iexp((i%8)+1);
+
+    lock(&mute);
+		  print_at_seg(seg % 4, value->expInt);
+    unlock(&mute);
+
+    free(value);
+		// printf_at_seg(seg % 4, "S%i: %04i", seg, value->expInt);
     }
 } 
 
@@ -113,30 +110,23 @@ void computeSomethingForever(int seg) {
  */
 void computeSomething(int seg) {
 	volatile int t = ticks;
-	printf_at_seg(seg % 4, "T%d:%d", seg, t);
+	ExpStruct* value = iexp(10);
+  lock(&mute);
+  piface_puts(".");
+  unlock(&mute);
+  free(value);
 	while(t==ticks);
 } 
 
 
 int main() {
-  uart_init();
-  piface_init();
-  piface_puts("DT8025 - A4P1");
-  print2uart("DT8025 - A4P1\n");
-  RPI_WaitMicroSeconds(2000000);	
-  piface_clear();
-  uart_clear();
-  
-  print2uart("initTimerInterrupts starts\n");
+	piface_init();
+	piface_puts("DT8025 - A4P1");
+	RPI_WaitMicroSeconds(2000000);	
+	piface_clear();
   initTimerInterrupts();
-  // Spawn threads BEFORE enabling interrupts
   spawn(computeSomethingForever, 0);
   spawn(computeSomethingForever, 1);
   spawn(computeSomethingForever, 2);
-  computeSomethingForever(3);
-  // ideal loop on main for testing
-  // while(1){
-  //   no_operation();
-  // }
+  computeSomethingForever(3);	
 }
-

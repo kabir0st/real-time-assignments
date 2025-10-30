@@ -3,7 +3,7 @@
  * Part of the code has been also developed, modified and extended to ARMv8 by Wagner de Morais and Hazem Ali.
 */
 /*
- * Modified by Wagner Morais on Oct 2024.
+ * Modified by Wagner Morais on Sep 2023.
  */
 
 #include <setjmp.h>
@@ -17,14 +17,13 @@
 #include "rpi-interrupts.h"
 #include "uart.h"
 #include "piface.h"
-#include "rpi-systimer.h"
 
 /*----------------------------------------------------------------------------
   Constants
  *----------------------------------------------------------------------------*/
 #define STACKSIZE	1024
 #define NTHREADS	5
-// #define NULL 		0
+#define NULL 		0
 
 
 /*----------------------------------------------------------------------------
@@ -71,30 +70,6 @@ thread current	= &initp;
 
 int initialized = 0;
 
-/** @brief Initializes each thread in the threads array.
- * For each thread in the threads array, a unique identifier is assigned
- * along with the task information. 
- */
-void initialize(void) {
-	initp.idx = -1;
-	initp.function = NULL;
-	initp.arg = -1;
-	initp.next = NULL;
-	initp.Period_Deadline = INT_MAX;
-	initp.Rel_Period_Deadline = INT_MAX;	
-	
-	for (int i=0; i < NTHREADS; i++)
-	{
-		threads[i].idx = i;
-		threads[i].function = NULL;
-		threads[i].arg = -1;
-		threads[i].next = &threads[i+1];
-		threads[i].Period_Deadline = INT_MAX;
-		threads[i].Rel_Period_Deadline = INT_MAX;
-	}
-	threads[NTHREADS-1].next = NULL;
-	initialized = 1;
-}
 
 /** @brief Adds an element to the tail of the queue  
  * @note In Assignment 4, parts 2 and 3, you might want to change this
@@ -106,8 +81,9 @@ static void enqueue(thread p, thread *queue) {
 		*queue = p;
 	} else {
 		thread q = *queue;
-		while (q->next)
+		while (q->next) {
 			q = q->next;
+		}
 		q->next = p;
 	}
 }
@@ -120,31 +96,67 @@ static thread dequeue(thread *queue) {
 		*queue = (*queue)->next;
 	} else {
 		// PUTTOLDC("%s", "Empty queue!!!");
-		// Empty queue, kernel panic!!!
+		// Empty queue, handle this condition gracefully!
 		// while (1) ;  // not much else to do...
 		return NULL;
 	}
 	return p;
 }
 
-/** @brief Starts or resumes the execution of the thread
- * select to execute.
- */
-static void dispatch(thread next) {
-	if (next != NULL) {
-		if (setjmp(current->context) == 0) {
-			print2uart("Jumping from thread %d to thread %d\n", current->idx, next->idx);
-			current = next;
-			longjmp(next->context, 1);
-		}
-	}
-	print2uart("------------------------ After Dispatch\n");
-	printTinyThreadsUART();
+/** @brief Initialize a single thread
+ */ 
+static void initializeThread(thread t, int idx) {
+    t->idx = idx;
+    t->function = NULL;
+    t->arg = -1;
+    t->next = &threads[idx + 1];
+    t->Period_Deadline = INT_MAX;
+    t->Rel_Period_Deadline = INT_MAX;
 }
 
 
-/** @brief Creates an thread block instance and assign to it an start routine, 
- * i.e., the procedure that the thread will execute.
+/** @brief Initializes each thread in the threads array.
+ * For each thread in the threads array, a unique identifier is assigned
+ * along with the task information. 
+ */
+static void initializeThreads(void) {
+	initp.idx = -1;
+	initp.function = NULL;
+	initp.arg = -1;
+	initp.next = NULL;
+	initp.Period_Deadline = INT_MAX;
+	initp.Rel_Period_Deadline = INT_MAX;	
+	
+	for (int i=0; i < NTHREADS; i++)
+	{
+		initializeThread(&threads[i], i);
+	}
+	threads[NTHREADS - 1].next = NULL;
+	initialized = 1;
+}
+
+
+
+/** @brief Context switch to the next thread.
+ * Starts or resumes the execution of the thread
+ * select to execute.
+ */
+static void dispatch(thread next) {
+	if (current != NULL) {
+		if (setjmp(current->context) == 0) {
+			current = next;
+			longjmp(next->context, 1);
+		}
+	} 
+	// else {
+	// 	current = next;
+	// 	longjmp(next->context, 1);
+	// }
+}
+
+
+/** @brief Creates a new thread and set its context,
+ * e.g., the procedure that the thread will execute.
  * @param function is a pointer to the start routine
  * @param int arg is the parameter to the start routine
  */
@@ -152,25 +164,19 @@ void spawn(void (* function)(int), int arg) {
 	thread newp;
 	DISABLE();
 	if (!initialized) 
-		initialize();
+		initializeThreads();
 	newp = dequeue(&freeQ);
 	newp->function = function;
 	newp->arg = arg;
 	newp->next = NULL;
 	if (setjmp(newp->context) == 1) {
-		// enabling interrupts before calling the function
-		// causes the function to be called in the context of the new thread
-		// and it's getting called inside the ISR stack.
 		ENABLE();
-		print2uart("Function Called\n");
 		current->function(current->arg);
-		print2uart("function call returned\n");
 		DISABLE();
 		enqueue(current, &freeQ);
-		current = NULL;
+		// current = NULL;
 		dispatch(dequeue(&readyQ));	
 	}
-	print2uart("Thread Stack setup %d\n", &newp->idx);
 	SETSTACK(&newp->context, &newp->stack);
 	enqueue(newp, &readyQ);
 	ENABLE();
@@ -180,58 +186,56 @@ void spawn(void (* function)(int), int arg) {
  * thread gets to run.
  */
 void yield(void) {
-	// since yield is called inside the ISR stack,
-	//  we don't need to disable interrupts, it's already disabled.
-	// DISABLE();
-	if (readyQ != NULL){
+	DISABLE();
+	if (readyQ != NULL){		
 		thread p = dequeue(&readyQ);
 		enqueue(current, &readyQ);
 		dispatch(p);
-	}
-	print2uart("Yielded to thread %d\n", current->idx);
-	// ENABLE();
+	}	
+	ENABLE();
 }
 
+/** @brief Sets the locked flag of the mutex if it was previously unlocked,
+ * otherwise, the running thread shall be placed in the waiting queue of the
+ * mutex and a new thread should be dispatched from the ready queue. 
+ */
 void lock(mutex *m) {
-  // To be implemented in Assignment 4!!!
-  DISABLE();
-  if(m->locked){
-    print2uart("Mutex locked. Thread %d has to wait.\n", current->idx);
-    if (&readyQ != NULL){
-      thread p = dequeue(&readyQ);
-      enqueue(current, &(m->waitQ));
-      dispatch(p);
-    }
-  }
-  else{
-    print2uart("Thread %d locked Mutex\n", current->idx);
-    m->locked = 1;
-  }
-  ENABLE();
+	// To be implemented in Assignment 4!!!
+
+    DISABLE(); //Disable interrupts
+
+
+	// If mutex is unlocked then lock it
+    if (m->locked == 0) {
+        m->locked = 1;
+    }else{
+		// Add the current thread in mutex waitQ
+		enqueue(current, &(m->waitQ));
+		// Dispatch the next thread from readyQ
+		thread next = dequeue(&readyQ);
+		dispatch(next);
+	}
+	ENABLE(); // Re-enable interrupts
 }
-
-
 
 /** @brief Activate a thread in the waiting queue of the mutex if it is
  * non-empty, otherwise, the locked flag shall be reset.
  */
-
 void unlock(mutex *m) {
-  // To be implemented in Assignment 4!!!
-  DISABLE();
-  if (m->waitQ != NULL) {
-    thread p = dequeue(&(m->waitQ));
-    enqueue(current, &readyQ);
-    print2uart("Thread %d has done waiting\n", p->idx);
-    dispatch(p);
-  }
-  else{
-    print2uart("Thread %d unlocked Mutex\n", current->idx);
-    m->locked = 0;
-  }
-  ENABLE();
-}
+	// To be implemented in Assignment 4!!!
+	DISABLE();  //Disable interrupts
 
+	// If there are threads waiting for the mutex, dequeue the next thread from the waitQ and dispatch
+    if(m->waitQ != NULL){
+        thread next = dequeue(&(m->waitQ));
+        enqueue(current, &readyQ);
+		dispatch(next);
+    }else{
+		// If no threads are waiting, mark the mutex as unlocked
+        m->locked = 0;
+    }
+    ENABLE();  // Re-enable interrupts
+}
 
 /** @brief Creates an thread block instance and assign to it an start routine, 
  * i.e., the procedure that the thread will execute.
@@ -247,7 +251,7 @@ void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, u
  * field or attribute.
  * https://arxiv.org/abs/2110.01111
  */
-static void sortX(thread *queue) {
+static void sort(thread *queue) {
 	// To be implemented in Assignment 4!!!
 }
 
@@ -255,7 +259,6 @@ static void sortX(thread *queue) {
  */
 static thread dequeueItem(thread *queue, int idx) {
 	// You might need it in Assignment 4!!!
-	return NULL;
 }
 
 /** @brief Periodic tasks have to be activated at a given frequency. Their activations are generated by timers .
@@ -267,15 +270,8 @@ void respawn_periodic_tasks(void) {
 /** @brief Schedules tasks using time slicing
  */
 static void scheduler_RR(void){
-  // To be implemented in Assignment 4!!!
-  print2uart("Current thread %d\n", current->idx);
-  if (readyQ != NULL){
-    thread p = dequeue(&readyQ);
-    enqueue(current, &readyQ);
-    dispatch(p);
-  }
-  print2uart("Yielded to thread %d\n", current->idx);
-  print2uart("Scheduler RR After Yielding %d\n", current->idx);
+	// To be implemented in Assignment 4!!!
+	yield();
 }
 
 /** @brief Schedules periodic tasks using Rate Monotonic (RM) 
@@ -297,10 +293,7 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
-	print2uart("Scheduler RR Called with thread %d\n", current->idx);
 	scheduler_RR();
-	// Note: if context switch happens, we may not return here
-	print2uart("Scheduler RR Returned with thread %d\n", current->idx);
 }
 
 /** @brief Prints via UART the content of the main variables in TinyThreads
@@ -308,30 +301,33 @@ void scheduler(void){
 void printTinyThreadsUART(void) {	
 	thread t;
 	t = threads;
+	print2uart("\nThreads\n");
+	for (int i=0; i<NTHREADS; i++)
+		print2uart("t[%i] @%#010x arg: %d idx: %d dl: %d\n", i, &t[i], t[i].arg, t[i].idx, t[i].Period_Deadline);		
 	
-	print2uart("\n\nCurrent\n");
-	print2uart("t[%i]\n", current->idx);		
+	print2uart("Current\n");
+	print2uart("t[%i] @%#010x arg: %d dl: %d\n", current->idx, &current, current->arg, current->Period_Deadline);		
 
-	print2uart("\n\nfreeQ\n");
+	print2uart("freeQ\n");
 	t=freeQ;
 	while(t)
 	{
-		print2uart("t[%i]\n", t->idx);		
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}
 
-	print2uart("\n\nreadyQ\n");
+	print2uart("readyQ\n");
 	t=readyQ;
 	while(t)
 	{
-		print2uart("t[%i]\n", t->idx);		
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}
-	print2uart("\n\ndoneQ\n");
+	print2uart("doneQ\n");
 	t=doneQ;
 	while(t)
 	{
-		print2uart("t[%i]\n", t->idx);		
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}	
 }

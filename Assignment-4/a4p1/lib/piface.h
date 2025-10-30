@@ -3,8 +3,9 @@
     Copyright (c) 2017, Sebastian Kunze <sebastian.kunze@hh.se>
     All rights reserved.
 */
+
 /*
- * Modified by Wagner Morais on Sep 2022.
+ * Modified by Wagner Morais on Sep 2023.
  */
 
 #ifndef _PIFACE_H
@@ -50,13 +51,14 @@
 #define LCD_RS      (1 << 6)
 #define LCD_BL      (1 << 7)
 
+
 #define LCD_DELAY \
 	do { for(volatile int DELAYx = 0; DELAYx < 5000; DELAYx++); } while(0);
+	
 
 #define PUTTOLDC(fmt, args...){ \
 	char s[9]; \
     sprintf(s, fmt, ##args); \
-	s[8] = '\0'; \
     piface_puts(s); \
 }
 

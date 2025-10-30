@@ -15,7 +15,6 @@
 #include "rpi-armtimer.h"
 #include "rpi-interrupts.h"
 #include "tinythreads.h"
-#include "uart.h"
 
 volatile int ticks = -1;
 /**
@@ -93,21 +92,22 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
     immediately put us back into the start of the handler again.
 */
 void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
-{
+{   //DISABLE();
 	if( RPI_GetArmTimer()->MaskedIRQ ) {
         /* Clear the ARM Timer interrupt - it's the only interrupt we have
            enabled, so we want don't have to work out which interrupt source
            caused us to interrupt */
         RPI_GetArmTimer()->IRQClear = 1;
         ticks++;
-        scheduler(); 
-        print2uart("Scheduler Returned\n");
+        scheduler();
     }
+    //ENABLE();
 }
 
 
 /**
     @brief The FIQ Interrupt Handler
+
     The FIQ handler can only be allocated to one interrupt source. The FIQ has
     a full CPU shadow register set. Upon entry to this function the CPU
     switches to the shadow register set so that there is no need to save
