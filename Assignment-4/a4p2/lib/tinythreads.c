@@ -347,7 +347,7 @@ static void scheduler_RR(void){
 /** @brief Schedules periodic tasks using Rate Monotonic (RM) 
  */
 static void scheduler_RM(void){
-	DISABLE();
+	
     respawn_periodic_tasks();
 
     if (readyQ != NULL) {
@@ -368,7 +368,7 @@ static void scheduler_RM(void){
         }
     }
 
-    ENABLE();
+    
 }
 
 /** @brief Schedules periodic tasks using Earliest Deadline First  (EDF) 
