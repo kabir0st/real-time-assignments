@@ -25,6 +25,7 @@
 #define NTHREADS	5
 #define NULL 		0
 
+extern volatile unsigned int ticks; 
 
 /*----------------------------------------------------------------------------
   Internal References and Macros
@@ -382,7 +383,10 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
-	scheduler_RR();
+	DISABLE();
+    respawn_periodic_tasks();
+    scheduler_RM();
+    ENABLE();
 }
 
 /** @brief Prints via UART the content of the main variables in TinyThreads
