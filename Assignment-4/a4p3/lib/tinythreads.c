@@ -1,0 +1,481 @@
+/*
+ * The code below has been developed by Johan Nordlander and Fredrik Bengtsson at LTU.
+ * Part of the code has been also developed, modified and extended to ARMv8 by Wagner de Morais and Hazem Ali.
+*/
+/*
+ * Modified by Wagner Morais on Sep 2023.
+ */
+
+#include <setjmp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <string.h>
+#include "rpi-systimer.h"
+
+#include "tinythreads.h"
+#include "rpi-interrupts.h"
+#include "uart.h"
+#include "piface.h"
+
+/*----------------------------------------------------------------------------
+  Constants
+ *----------------------------------------------------------------------------*/
+#define STACKSIZE	1024
+#define NTHREADS	5
+#define NULL 		0
+
+
+
+/*----------------------------------------------------------------------------
+  Internal References and Macros
+ *----------------------------------------------------------------------------*/
+
+__attribute__(( always_inline )) static inline void enable() {
+	__asm volatile("CPSIE  i \n"); //Clear PRIMASK
+}
+
+__attribute__(( always_inline )) static inline void disable(){
+	__asm volatile("cpsid i \n"); //set PRIMASK
+}
+
+#define DISABLE() disable()
+#define ENABLE()  enable()
+#define SETSTACK(buf,a) *((unsigned int *)(buf)+8) = (unsigned int)(a) + STACKSIZE - 4;	
+
+/*----------------------------------------------------------------------------
+  Thread control structures
+ *----------------------------------------------------------------------------*/
+struct thread_block {
+	short idx;								// Unique identifier
+	void (*function)(int);					// Code to run, i.e. the routine to run
+	int arg;								// Argument to the above
+	thread next;							// For use in linked lists
+	jmp_buf context;						// Machine state
+	char stack[STACKSIZE];					// Execution stack space
+	unsigned int Period_Deadline;			// Absolute Period and Deadline of the thread
+	unsigned int Rel_Period_Deadline;		// Relative Period and Deadline of the thread
+};
+
+struct thread_block threads[NTHREADS];
+struct thread_block initp;
+
+// @brief Points to a queue of free thread_block instances/element in the threads array.
+thread freeQ 	= threads;
+// @brief Points to a queue of thread_block instances in the threads array that are ready to execute.
+thread readyQ	= NULL;
+// @brief Points to a queue of thread_block instances in the threads array that have finished execution
+thread doneQ	= NULL;
+
+thread current	= &initp;
+
+int initialized = 0;
+
+
+/** @brief Adds an element to the tail of the queue  
+ * @note In Assignment 4, parts 2 and 3, you might want to change this
+ * implementation to enqueue with insertion sort.
+ */
+static void enqueue(thread p, thread *queue) {
+	p->next = NULL;
+	if (*queue == NULL) {
+		*queue = p;
+	} else {
+		thread q = *queue;
+		while (q->next) {
+			q = q->next;
+		}
+		q->next = p;
+	}
+}
+
+
+/** @brief Remove an element from the head of the queue
+ */
+static thread dequeue(thread *queue) {
+	thread p = *queue;
+	if (*queue) {
+		*queue = (*queue)->next;
+	} else {
+		// PUTTOLDC("%s", "Empty queue!!!");
+		// Empty queue, handle this condition gracefully!
+		// while (1) ;  // not much else to do...
+		return NULL;
+	}
+	return p;
+}
+
+/** @brief Initialize a single thread
+ */ 
+static void initializeThread(thread t, int idx) {
+    t->idx = idx;
+    t->function = NULL;
+    t->arg = -1;
+    t->next = &threads[idx + 1];
+    t->Period_Deadline = INT_MAX;
+    t->Rel_Period_Deadline = INT_MAX;
+}
+
+
+/** @brief Initializes each thread in the threads array.
+ * For each thread in the threads array, a unique identifier is assigned
+ * along with the task information. 
+ */
+static void initializeThreads(void) {
+	initp.idx = -1;
+	initp.function = NULL;
+	initp.arg = -1;
+	initp.next = NULL;
+	initp.Period_Deadline = INT_MAX;
+	initp.Rel_Period_Deadline = INT_MAX;	
+	
+	for (int i=0; i < NTHREADS; i++)
+	{
+		initializeThread(&threads[i], i);
+	}
+	threads[NTHREADS - 1].next = NULL;
+	initialized = 1;
+}
+
+
+
+/** @brief Context switch to the next thread.
+ * Starts or resumes the execution of the thread
+ * select to execute.
+ */
+static void dispatch(thread next) {
+	if (current != NULL) {
+		if (setjmp(current->context) == 0) {
+			current = next;
+			longjmp(next->context, 1);
+		}
+	}
+}
+
+
+/** @brief Creates a new thread and set its context,
+ * e.g., the procedure that the thread will execute.
+ * @param function is a pointer to the start routine
+ * @param int arg is the parameter to the start routine
+ */
+void spawn(void (* function)(int), int arg) {
+	thread newp;
+	DISABLE();
+	if (!initialized) 
+		initializeThreads();
+	newp = dequeue(&freeQ);
+	newp->function = function;
+	newp->arg = arg;
+	newp->next = NULL;
+	if (setjmp(newp->context) == 1) {
+		ENABLE();
+		current->function(current->arg);
+		DISABLE();
+		enqueue(current, &freeQ);
+		// current = NULL;
+		dispatch(dequeue(&readyQ));	
+	}
+	SETSTACK(&newp->context, &newp->stack);
+	enqueue(newp, &readyQ);
+	ENABLE();
+}
+
+/** @brief Preempts the execution of the current thread and a new 
+ * thread gets to run.
+ */
+void yield(void) {
+	DISABLE();
+	if (readyQ != NULL){		
+		thread p = dequeue(&readyQ);
+		enqueue(current, &readyQ);
+		dispatch(p);
+	}	
+	ENABLE();
+}
+
+/** @brief Sets the locked flag of the mutex if it was previously unlocked,
+ * otherwise, the running thread shall be placed in the waiting queue of the
+ * mutex and a new thread should be dispatched from the ready queue. 
+ */
+void lock(mutex *m) {
+    DISABLE(); //Disable interrupts
+	// If mutex is unlocked then lock it
+    if (m->locked == 0) {
+        m->locked = 1;
+    }else{
+		// Add the current thread in mutex waitQ
+		enqueue(current, &(m->waitQ));
+		// Dispatch the next thread from readyQ
+		thread next = dequeue(&readyQ);
+		dispatch(next);
+	}
+	ENABLE(); // Re-enable interrupts
+}
+
+/** @brief Activate a thread in the waiting queue of the mutex if it is
+ * non-empty, otherwise, the locked flag shall be reset.
+ */
+void unlock(mutex *m) {
+	DISABLE();  //Disable interrupts
+	// If there are threads waiting for the mutex, dequeue the next thread from the waitQ and dispatch
+    if(m->waitQ != NULL){
+        thread next = dequeue(&(m->waitQ));
+        enqueue(current, &readyQ);
+		dispatch(next);
+    }else{
+		// If no threads are waiting, mark the mutex as unlocked
+        m->locked = 0;
+    }
+    ENABLE();
+}
+
+/** @brief Creates an thread block instance and assign to it an start routine, 
+ * i.e., the procedure that the thread will execute.
+ * @param function is a pointer to the start routine
+ * @param int arg is the parameter to the start routine
+ */
+
+
+void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, unsigned int rel_deadline) {
+	// To be implemented in Assignment 4!!!
+	thread newp;
+	DISABLE();
+	if (!initialized) {
+		initializeThreads();
+	}
+	newp = dequeue(&freeQ);
+	newp->function = function;
+	newp->arg = arg;
+	newp->Period_Deadline = deadline;
+	newp->Rel_Period_Deadline = rel_deadline;
+	newp->next = NULL;
+
+	if (setjmp(newp->context) == 1) {
+        ENABLE();
+        current->function(current->arg);
+        DISABLE();
+        enqueue(current, &doneQ);
+		thread next = dequeue(&readyQ);
+		dispatch(next);
+		return;
+	}
+
+	SETSTACK(&newp->context, &newp->stack);
+	enqueue(newp, &readyQ);
+	ENABLE();
+}
+
+
+/** @brief Sort the elements a given queue container by a given 
+ * field or attribute.
+ * https://arxiv.org/abs/2110.01111
+ */
+static void sort(thread *queue) {
+	// In-place insertion sort on singly-linked list by Period_Deadline (ascending) for EDF
+	if (queue == NULL || *queue == NULL)
+		return;
+	thread sorted = NULL;
+	thread node = *queue;
+	while (node) {
+		thread next = node->next;
+		// insert node into sorted list
+		if (sorted == NULL || node->Period_Deadline < sorted->Period_Deadline) {
+			node->next = sorted;
+			sorted = node;
+		} else {
+			thread cur = sorted;
+			while (cur->next && cur->next->Period_Deadline <= node->Period_Deadline) {
+				cur = cur->next;
+			}
+			node->next = cur->next;
+			cur->next = node;
+		}
+		node = next;
+	}
+	*queue = sorted;
+}
+
+/** @brief Removes a specific element from the queue.
+ */
+static thread dequeueItem(thread *queue, int idx) {
+	// You might need it in Assignment 4!!!
+	return NULL;
+}
+
+/** @brief Periodic tasks have to be activated at a given frequency. Their activations are generated by timers .
+ */
+void respawn_periodic_tasks(void) {
+    thread p = dequeue(&doneQ);
+  thread tempDoneQ = NULL;
+  volatile int t = ticks;
+
+  while (p != NULL) {
+    // If the thread's deadline hasn't passed, move to the next one
+    if ((unsigned int)t < p->Period_Deadline) {
+      enqueue(p, &tempDoneQ);
+      p = dequeue(&doneQ);
+      continue;
+    }
+    // Update the period deadline for the thread
+    p->Period_Deadline += p->Rel_Period_Deadline;
+
+    // Try to set the thread's context for the next run
+    if (setjmp(p->context) != 0) {
+      ENABLE();
+      current->function(current->arg);
+      DISABLE();
+      enqueue(current, &doneQ);
+
+      // Dispatch the next thread from readyQ
+      thread next = dequeue(&readyQ);
+      if (next != NULL) {
+        dispatch(next);
+      }
+      return;
+    }
+	SETSTACK(&p->context, &p->stack);
+    // Enqueue the thread back into readyQ
+    enqueue(p, &readyQ);
+    // Move to the next thread
+    p = dequeue(&doneQ);
+  }
+  // Update doneQ with threads not ready to run yet
+  doneQ = tempDoneQ;
+}
+
+/** @brief Schedules tasks using time slicing
+ */
+static void scheduler_RR(void){
+	yield();
+}
+
+/** @brief Schedules periodic tasks using Rate Monotonic (RM) 
+ */
+static void scheduler_RM(void){
+	DISABLE();
+	respawn_periodic_tasks();
+	sort(&readyQ);
+	yield();
+	ENABLE();
+}
+
+/** @brief Schedules periodic tasks using Earliest Deadline First  (EDF) 
+ */
+static void scheduler_EDF(void){
+	DISABLE();
+	respawn_periodic_tasks();
+	sort(&readyQ);
+	yield();
+	ENABLE();
+}
+
+/** @brief Calls the actual scheduling mechanisms, i.e., Round Robin,
+ * Rate monotonic, or Earliest Deadline First.
+ * When dealing with periodic tasks with fixed execution time,
+ * it will first call the method that re-spawns period tasks.
+ */
+void scheduler(void){
+	scheduler_EDF();
+}
+
+/** @brief Prints via UART the content of the main variables in TinyThreads
+ */
+void printTinyThreadsUART(void) {	
+	thread t;
+	t = threads;
+	print2uart("\nThreads\n");
+	for (int i=0; i<NTHREADS; i++)
+		print2uart("t[%i] @%#010x arg: %d idx: %d dl: %d\n", i, &t[i], t[i].arg, t[i].idx, t[i].Period_Deadline);		
+	
+	print2uart("Current\n");
+	print2uart("t[%i] @%#010x arg: %d dl: %d\n", current->idx, &current, current->arg, current->Period_Deadline);		
+
+	print2uart("freeQ\n");
+	t=freeQ;
+	while(t)
+	{
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
+		t = t->next;
+	}
+
+	print2uart("readyQ\n");
+	t=readyQ;
+	while(t)
+	{
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
+		t = t->next;
+	}
+	print2uart("doneQ\n");
+	t=doneQ;
+	while(t)
+	{
+		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
+		t = t->next;
+	}	
+}
+
+/** @brief Prints on the PiFace the content of the main variables in TinyThreads
+ */
+void printTinyThreadsPiface(void) {	
+	thread t;
+
+	piface_clear();
+	piface_puts("t for thread");
+	RPI_WaitMicroSeconds(2000000);
+
+	t = threads;
+	piface_clear();
+	piface_puts("Threads");
+	RPI_WaitMicroSeconds(2000000);
+	for (int i=0; i<NTHREADS; i++)
+	{
+		piface_clear();
+		PUTTOLDC("t[%i] @%#010x (%d)", i, &t[i], t[i].arg);		
+		RPI_WaitMicroSeconds(2000000);
+	}
+	
+	piface_clear();
+	piface_puts("Current");
+	RPI_WaitMicroSeconds(2000000);
+	piface_clear();
+	PUTTOLDC("t[%i] @%#010x (%d)", current->idx, &current, current->arg);		
+	RPI_WaitMicroSeconds(2000000);
+
+	piface_clear();
+	t = freeQ;
+	piface_puts("freeQ");
+	RPI_WaitMicroSeconds(2000000);
+	while(t)
+	{
+		piface_clear();
+		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);		
+		RPI_WaitMicroSeconds(2000000);
+		t = t->next;
+	}
+	
+	piface_clear();
+	t = readyQ;
+	piface_puts("readyQ");
+	RPI_WaitMicroSeconds(2000000);
+	while(t)
+	{
+		piface_clear();
+		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);		
+		RPI_WaitMicroSeconds(2000000);
+		t = t->next;
+	}
+	
+	piface_clear();
+	t = doneQ;
+	piface_puts("doneQ");
+	RPI_WaitMicroSeconds(2000000);
+	while(t)
+	{
+		piface_clear();
+		PUTTOLDC("t[%i] @%#010x (%d)", t->idx, t, t->arg);		
+		RPI_WaitMicroSeconds(2000000);
+		t = t->next;
+	}
+	piface_clear();
+}
