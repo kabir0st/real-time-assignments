@@ -291,6 +291,7 @@ void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, u
         current->function(current->arg);
         DISABLE();
         // For periodic tasks: schedule next activation and move to doneQ (waiting)
+		// int max represents that this task has no period in our system.
         if (current->Rel_Period_Deadline != INT_MAX) {
             // next absolute activation
             current->Period_Deadline += current->Rel_Period_Deadline;
@@ -314,7 +315,28 @@ void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, u
  * https://arxiv.org/abs/2110.01111
  */
 static void sort(thread *queue) {
-	// To be implemented in Assignment 4!!!
+	// In-place insertion sort on singly-linked list by Rel_Period_Deadline (ascending)
+	if (queue == NULL || *queue == NULL)
+		return;
+	thread sorted = NULL;
+	thread node = *queue;
+	while (node) {
+		thread next = node->next;
+		// insert node into sorted list
+		if (sorted == NULL || node->Rel_Period_Deadline < sorted->Rel_Period_Deadline) {
+			node->next = sorted;
+			sorted = node;
+		} else {
+			thread cur = sorted;
+			while (cur->next && cur->next->Rel_Period_Deadline <= node->Rel_Period_Deadline) {
+				cur = cur->next;
+			}
+			node->next = cur->next;
+			cur->next = node;
+		}
+		node = next;
+	}
+	*queue = sorted;
 }
 
 /** @brief Removes a specific element from the queue.
@@ -328,11 +350,15 @@ static thread dequeueItem(thread *queue, int idx) {
 void respawn_periodic_tasks(void) {
     DISABLE();
     // doneQ is sorted by Period_Deadline ascending, so move from head while ready
-    while (doneQ && doneQ->Period_Deadline <= ticks) {
+    while (doneQ && doneQ->Period_Deadline <= (unsigned int)ticks) {
         thread t = dequeue(&doneQ);
-        // t->Period_Deadline already updated when the task completed
-        // place back into readyQ (sorted by Rel_Period_Deadline)
-        enqueue(t, &readyQ);
+        // If task is periodic, place back into readyQ (sorted by Rel_Period_Deadline)
+        if (t->Rel_Period_Deadline != INT_MAX) {
+            enqueue(t, &readyQ);
+        } else {
+            // Safety: non-periodic tasks should not be in doneQ; recycle if encountered
+            enqueue(t, &freeQ);
+        }
     }
     ENABLE();
 }
@@ -340,35 +366,27 @@ void respawn_periodic_tasks(void) {
 /** @brief Schedules tasks using time slicing
  */
 static void scheduler_RR(void){
-	// To be implemented in Assignment 4!!!
 	yield();
 }
 
 /** @brief Schedules periodic tasks using Rate Monotonic (RM) 
  */
 static void scheduler_RM(void){
-	
-    respawn_periodic_tasks();
-
-    if (readyQ != NULL) {
-        thread next = dequeue(&readyQ);
-        // If no current task or next has higher priority (smaller Rel_Period_Deadline),
-        // preempt current and run next. If current is init or non-periodic treat as low priority.
-        unsigned int cur_period = (current && current != &initp) ? current->Rel_Period_Deadline : INT_MAX;
-
-        if (current == &initp || cur_period > next->Rel_Period_Deadline) {
-            // put current back into readyQ if it is a normal thread (not init)
-            if (current != &initp) {
-                enqueue(current, &readyQ);
-            }
-            dispatch(next);
-        } else {
-            // current remains; put next back into readyQ in sorted order
-            enqueue(next, &readyQ);
-        }
-    }
-
-    
+	if (readyQ != NULL) {
+		thread next = dequeue(&readyQ);
+		// If next has higher priority (smaller Rel_Period_Deadline), preempt current.
+		// Treat init or non-periodic current (INT_MAX) as lowest priority.
+		unsigned int cur_period = (current && current != &initp) ? current->Rel_Period_Deadline : INT_MAX;
+		if (current == &initp || cur_period > next->Rel_Period_Deadline) {
+			if (current != &initp) {
+				enqueue(current, &readyQ);
+			}
+			dispatch(next);
+		} else {
+			// Keep running current; return next to readyQ maintaining order
+			enqueue(next, &readyQ);
+		}
+	}
 }
 
 /** @brief Schedules periodic tasks using Earliest Deadline First  (EDF) 
@@ -383,11 +401,10 @@ static void scheduler_EDF(void){
  * it will first call the method that re-spawns period tasks.
  */
 void scheduler(void){
-	// To be implemented in Assignment 4!!!
 	DISABLE();
-    respawn_periodic_tasks();
-    scheduler_RM();
-    ENABLE();
+	respawn_periodic_tasks();
+	scheduler_RM();
+	ENABLE();
 }
 
 /** @brief Prints via UART the content of the main variables in TinyThreads

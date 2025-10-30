@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "rpi-systimer.h"
 
-volatile unsigned int ticks = 0;
+extern volatile int ticks;
 
 static rpi_sys_timer_t* rpiSystemTimer = (rpi_sys_timer_t*)RPI_SYSTIMER_BASE;
 
